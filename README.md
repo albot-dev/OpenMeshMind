@@ -65,6 +65,7 @@ python3 experiments/fedavg_cpu_only.py --secure-aggregation --json-out secure_me
 - `BASELINE_POLICY.md`
 - `GOVERNANCE.md`
 - `CHANGELOG.md`
+- `PROJECTS.md`
 
 ## Next milestones
 
@@ -72,6 +73,7 @@ See `ROADMAP.md` for phased execution.
 
 ## Work tracking
 
+- Project board: <https://github.com/users/albot-dev/projects/1>
 - Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Starter issues:
   - <https://github.com/albot-dev/OpenMeshMind/issues/1>
