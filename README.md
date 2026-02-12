@@ -54,6 +54,12 @@ python3 experiments/fedavg_cpu_only.py --non-iid-sweep 0.2,1.4,3.0 --json-out no
 
 A sample sweep summary is available in `reports/non_iid_severity_sweep.md`.
 
+Run with mock secure aggregation (masked update aggregation + overhead metrics):
+
+```bash
+python3 experiments/fedavg_cpu_only.py --secure-aggregation --json-out secure_metrics.json
+```
+
 ## Next milestones
 
 See `ROADMAP.md` for phased execution.

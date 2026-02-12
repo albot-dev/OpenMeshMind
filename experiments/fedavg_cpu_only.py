@@ -28,6 +28,8 @@ class RunResult:
     uplink_bytes: int
     participation_rate: float | None = None
     zero_client_rounds: int = 0
+    secure_overhead_bytes: int = 0
+    secure_mask_pair_count: int = 0
 
 
 DEFAULT_N_FEATURES = 18
@@ -79,6 +81,55 @@ def quantize_int8(vec: list[float]) -> tuple[list[int], float]:
 
 def dequantize_int8(qvec: list[int], scale: float) -> list[float]:
     return [q * scale for q in qvec]
+
+
+def add_in_place(dst: list[float], src: list[float]) -> None:
+    for idx, value in enumerate(src):
+        dst[idx] += value
+
+
+def secure_mask_updates(
+    updates: list[list[float]],
+    mask_bound: float = 0.01,
+) -> tuple[list[list[float]], int, int]:
+    """
+    Simulate pairwise masking with seed exchange.
+
+    Returns:
+    - masked updates for server aggregation
+    - estimated overhead bytes for mask seed exchange
+    - number of mask pairs created
+    """
+    if len(updates) < 2:
+        return updates, 0, 0
+
+    dim = len(updates[0])
+    masks = [[0.0] * dim for _ in updates]
+    mask_pairs = 0
+    for i in range(len(updates)):
+        for j in range(i + 1, len(updates)):
+            mask_pairs += 1
+            for k in range(dim):
+                val = random.uniform(-mask_bound, mask_bound)
+                masks[i][k] += val
+                masks[j][k] -= val
+
+    masked_updates = []
+    for idx, update in enumerate(updates):
+        masked = [value + masks[idx][k] for k, value in enumerate(update)]
+        masked_updates.append(masked)
+
+    # Simulate exchange of PRG seeds per pair (16 bytes each direction).
+    overhead_bytes = mask_pairs * 32
+    return masked_updates, overhead_bytes, mask_pairs
+
+
+def secure_aggregate(masked_updates: list[list[float]]) -> list[float]:
+    dim = len(masked_updates[0])
+    aggregate = [0.0] * dim
+    for update in masked_updates:
+        add_in_place(aggregate, update)
+    return aggregate
 
 
 def generate_dataset(
@@ -187,18 +238,18 @@ def run_fedavg(
     lr: float,
     quantized: bool,
     dropout_rate: float = 0.0,
+    secure_aggregation: bool = False,
 ) -> RunResult:
     server_w = [0.0] * n_features
     server_b = 0.0
     total_bytes = 0
     selected_clients = 0
     zero_client_rounds = 0
+    secure_overhead_bytes = 0
+    secure_mask_pair_count = 0
 
     t0 = time.perf_counter()
     for _ in range(rounds):
-        agg_delta_w = [0.0] * n_features
-        agg_delta_b = 0.0
-
         if dropout_rate <= 0.0:
             active_client_indices = list(range(len(clients)))
         else:
@@ -212,6 +263,7 @@ def run_fedavg(
             continue
 
         active_examples = sum(len(clients[idx]) for idx in active_client_indices)
+        weighted_updates: list[list[float]] = []
 
         for idx in active_client_indices:
             local_data = clients[idx]
@@ -231,13 +283,21 @@ def run_fedavg(
                 restored = delta_vec
                 total_bytes += len(delta_vec) * 4  # float32 equivalent
 
-            for j in range(n_features):
-                agg_delta_w[j] += weight * restored[j]
-            agg_delta_b += weight * restored[-1]
+            weighted_updates.append([weight * val for val in restored])
+
+        if secure_aggregation:
+            masked_updates, overhead, mask_pairs = secure_mask_updates(weighted_updates)
+            secure_overhead_bytes += overhead
+            secure_mask_pair_count += mask_pairs
+            aggregate_update = secure_aggregate(masked_updates)
+        else:
+            aggregate_update = [0.0] * (n_features + 1)
+            for update in weighted_updates:
+                add_in_place(aggregate_update, update)
 
         for j in range(n_features):
-            server_w[j] += agg_delta_w[j]
-        server_b += agg_delta_b
+            server_w[j] += aggregate_update[j]
+        server_b += aggregate_update[-1]
 
     dt = time.perf_counter() - t0
     total_client_slots = rounds * len(clients)
@@ -248,6 +308,8 @@ def run_fedavg(
         uplink_bytes=total_bytes,
         participation_rate=participation_rate,
         zero_client_rounds=zero_client_rounds,
+        secure_overhead_bytes=secure_overhead_bytes,
+        secure_mask_pair_count=secure_mask_pair_count,
     )
 
 
@@ -263,6 +325,7 @@ def run_once(
     seed: int,
     dropout_rate: float = 0.0,
     non_iid_severity: float = DEFAULT_NON_IID_SEVERITY,
+    secure_aggregation: bool = False,
     n_features: int = DEFAULT_N_FEATURES,
     n_clients: int = DEFAULT_N_CLIENTS,
     rounds: int = DEFAULT_ROUNDS,
@@ -295,6 +358,7 @@ def run_once(
             lr=lr,
             quantized=False,
             dropout_rate=dropout_rate,
+            secure_aggregation=secure_aggregation,
         ),
         "fedavg_int8": run_fedavg(
             clients=clients,
@@ -306,6 +370,7 @@ def run_once(
             lr=lr,
             quantized=True,
             dropout_rate=dropout_rate,
+            secure_aggregation=secure_aggregation,
         ),
     }
 
@@ -339,6 +404,14 @@ def aggregate(
             methods[name]["participation_rate_std"] = statistics.pstdev(participation)
             methods[name]["zero_client_rounds_mean"] = statistics.mean(
                 [r[name].zero_client_rounds for r in results]
+            )
+        secure_overheads = [r[name].secure_overhead_bytes for r in results]
+        if any(secure_overheads):
+            methods[name]["secure_overhead_mean_bytes"] = int(
+                statistics.mean(secure_overheads)
+            )
+            methods[name]["secure_mask_pairs_mean"] = statistics.mean(
+                [r[name].secure_mask_pair_count for r in results]
             )
 
     fp = methods["fedavg_fp32"]["uplink_mean_bytes"]
@@ -381,15 +454,22 @@ def run_experiment(
     seeds: list[int],
     dropout_rate: float,
     non_iid_severity: float,
+    secure_aggregation: bool,
 ) -> dict[str, object]:
     all_results = [
-        run_once(seed, dropout_rate=dropout_rate, non_iid_severity=non_iid_severity)
+        run_once(
+            seed,
+            dropout_rate=dropout_rate,
+            non_iid_severity=non_iid_severity,
+            secure_aggregation=secure_aggregation,
+        )
         for seed in seeds
     ]
     report_config: dict[str, object] = {
         "seeds": seeds,
         "dropout_rate": dropout_rate,
         "non_iid_severity": non_iid_severity,
+        "secure_aggregation": secure_aggregation,
         "n_features": DEFAULT_N_FEATURES,
         "n_clients": DEFAULT_N_CLIENTS,
         "rounds": DEFAULT_ROUNDS,
@@ -401,7 +481,12 @@ def run_experiment(
 
     if dropout_rate > 0.0:
         no_dropout_results = [
-            run_once(seed, dropout_rate=0.0, non_iid_severity=non_iid_severity)
+            run_once(
+                seed,
+                dropout_rate=0.0,
+                non_iid_severity=non_iid_severity,
+                secure_aggregation=secure_aggregation,
+            )
             for seed in seeds
         ]
         no_dropout_config = dict(report_config)
@@ -419,6 +504,7 @@ def summarize_sweep(sweep_report: dict[str, object]) -> None:
     print("Non-IID severity robustness sweep\n")
     print(
         f"dropout_rate={sweep_report['dropout_rate']:.2f}, "
+        f"secure_aggregation={sweep_report['secure_aggregation']}, "
         f"scenarios={len(sweep_report['scenarios'])}, "
         f"seeds_per_scenario={sweep_report['runs_per_scenario']}"
     )
@@ -449,6 +535,7 @@ def summarize(report: dict[str, object]) -> None:
         "Config:"
         f" dropout_rate={config['dropout_rate']:.2f},"
         f" non_iid_severity={config['non_iid_severity']:.2f},"
+        f" secure_aggregation={config['secure_aggregation']},"
         f" clients={config['n_clients']},"
         f" rounds={config['rounds']},"
         f" local_steps={config['local_steps']}"
@@ -475,6 +562,12 @@ def summarize(report: dict[str, object]) -> None:
                 " " * 16
                 + f"participation={row['participation_rate_mean']:.2%}, "
                 + f"zero-rounds={row['zero_client_rounds_mean']:.2f}"
+            )
+        if "secure_overhead_mean_bytes" in row:
+            print(
+                " " * 16
+                + f"secure-overhead={fmt_bytes(row['secure_overhead_mean_bytes'])}, "
+                + f"mask-pairs={row['secure_mask_pairs_mean']:.2f}"
             )
 
     savings = report["communication_reduction_percent"]
@@ -524,6 +617,14 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--secure-aggregation",
+        action="store_true",
+        help=(
+            "Enable a mock secure aggregation mode where the server aggregates "
+            "masked weighted updates."
+        ),
+    )
+    parser.add_argument(
         "--json-out",
         default="",
         help="Optional path to write machine-readable JSON metrics.",
@@ -550,6 +651,7 @@ def main() -> None:
                 seeds=seeds,
                 dropout_rate=args.dropout_rate,
                 non_iid_severity=severity,
+                secure_aggregation=args.secure_aggregation,
             )
             for severity in severities
         ]
@@ -557,6 +659,7 @@ def main() -> None:
             "schema_version": 2,
             "sweep_type": "non_iid_severity",
             "dropout_rate": args.dropout_rate,
+            "secure_aggregation": args.secure_aggregation,
             "runs_per_scenario": len(seeds),
             "scenarios": scenarios,
         }
@@ -572,6 +675,7 @@ def main() -> None:
         seeds=seeds,
         dropout_rate=args.dropout_rate,
         non_iid_severity=args.non_iid_severity,
+        secure_aggregation=args.secure_aggregation,
     )
 
     if not args.quiet:
