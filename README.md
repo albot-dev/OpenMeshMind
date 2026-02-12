@@ -40,6 +40,12 @@ Validate thresholds:
 python3 scripts/check_baseline.py baseline_metrics.json
 ```
 
+Run a drop-out resilience scenario (with automatic comparison vs no drop-out):
+
+```bash
+python3 experiments/fedavg_cpu_only.py --dropout-rate 0.35 --json-out dropout_35_metrics.json
+```
+
 ## Next milestones
 
 See `ROADMAP.md` for phased execution.
