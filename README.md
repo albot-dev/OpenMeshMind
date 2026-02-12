@@ -43,3 +43,13 @@ python3 scripts/check_baseline.py baseline_metrics.json
 ## Next milestones
 
 See `ROADMAP.md` for phased execution.
+
+## Work tracking
+
+- Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
+- Starter issues:
+  - <https://github.com/albot-dev/OpenMeshMind/issues/1>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/2>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/3>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/4>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/5>
