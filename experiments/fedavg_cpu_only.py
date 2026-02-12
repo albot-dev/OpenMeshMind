@@ -36,6 +36,7 @@ DEFAULT_ROUNDS = 35
 DEFAULT_LOCAL_STEPS = 14
 DEFAULT_BATCH_SIZE = 20
 DEFAULT_LR = 0.11
+DEFAULT_NON_IID_SEVERITY = 1.4
 
 
 def sigmoid(z: float) -> float:
@@ -112,9 +113,10 @@ def train_test_split(
 def non_iid_partition(
     train_data: list[tuple[list[float], int]],
     n_clients: int = 8,
+    severity: float = 1.4,
 ) -> list[list[tuple[list[float], int]]]:
-    # Sort by a class-biased score to force client heterogeneity.
-    scored = sorted(train_data, key=lambda s: (s[0][0] + 1.4 * s[1], s[1]))
+    # Sort by a class-biased score to control client heterogeneity severity.
+    scored = sorted(train_data, key=lambda s: (s[0][0] + severity * s[1], s[1]))
     chunks: list[list[tuple[list[float], int]]] = [[] for _ in range(n_clients)]
     chunk_size = len(scored) // n_clients
 
@@ -260,6 +262,7 @@ def fmt_bytes(num_bytes: int) -> str:
 def run_once(
     seed: int,
     dropout_rate: float = 0.0,
+    non_iid_severity: float = DEFAULT_NON_IID_SEVERITY,
     n_features: int = DEFAULT_N_FEATURES,
     n_clients: int = DEFAULT_N_CLIENTS,
     rounds: int = DEFAULT_ROUNDS,
@@ -269,7 +272,7 @@ def run_once(
 ) -> dict[str, RunResult]:
     data = generate_dataset(seed=seed, n_features=n_features)
     train_data, test_data = train_test_split(data)
-    clients = non_iid_partition(train_data, n_clients=n_clients)
+    clients = non_iid_partition(train_data, n_clients=n_clients, severity=non_iid_severity)
 
     total_steps_central = rounds * local_steps * n_clients
 
@@ -374,6 +377,68 @@ def compare_to_no_dropout(
     return output
 
 
+def run_experiment(
+    seeds: list[int],
+    dropout_rate: float,
+    non_iid_severity: float,
+) -> dict[str, object]:
+    all_results = [
+        run_once(seed, dropout_rate=dropout_rate, non_iid_severity=non_iid_severity)
+        for seed in seeds
+    ]
+    report_config: dict[str, object] = {
+        "seeds": seeds,
+        "dropout_rate": dropout_rate,
+        "non_iid_severity": non_iid_severity,
+        "n_features": DEFAULT_N_FEATURES,
+        "n_clients": DEFAULT_N_CLIENTS,
+        "rounds": DEFAULT_ROUNDS,
+        "local_steps": DEFAULT_LOCAL_STEPS,
+        "batch_size": DEFAULT_BATCH_SIZE,
+        "learning_rate": DEFAULT_LR,
+    }
+    report = aggregate(all_results, config=report_config)
+
+    if dropout_rate > 0.0:
+        no_dropout_results = [
+            run_once(seed, dropout_rate=0.0, non_iid_severity=non_iid_severity)
+            for seed in seeds
+        ]
+        no_dropout_config = dict(report_config)
+        no_dropout_config["dropout_rate"] = 0.0
+        no_dropout_report = aggregate(no_dropout_results, config=no_dropout_config)
+        report["comparison_vs_no_dropout"] = compare_to_no_dropout(
+            report=report,
+            no_dropout_report=no_dropout_report,
+        )
+
+    return report
+
+
+def summarize_sweep(sweep_report: dict[str, object]) -> None:
+    print("Non-IID severity robustness sweep\n")
+    print(
+        f"dropout_rate={sweep_report['dropout_rate']:.2f}, "
+        f"scenarios={len(sweep_report['scenarios'])}, "
+        f"seeds_per_scenario={sweep_report['runs_per_scenario']}"
+    )
+    print(
+        f"{'Severity':<10} {'FedAvg fp32 acc':<16} {'FedAvg int8 acc':<16} "
+        f"{'Int8 comm save':<16}"
+    )
+    print("-" * 72)
+
+    for scenario in sweep_report["scenarios"]:
+        config = scenario["config"]
+        methods = scenario["methods"]
+        comm_saving = f"{scenario['communication_reduction_percent']:.2f}%"
+        print(
+            f"{config['non_iid_severity']:<10.2f} "
+            f"{methods['fedavg_fp32']['accuracy_mean']:<16.4f} "
+            f"{methods['fedavg_int8']['accuracy_mean']:<16.4f} "
+            f"{comm_saving:<16}"
+        )
+
 def summarize(report: dict[str, object]) -> None:
     methods = report["methods"]
     config = report["config"]
@@ -383,6 +448,7 @@ def summarize(report: dict[str, object]) -> None:
     print(
         "Config:"
         f" dropout_rate={config['dropout_rate']:.2f},"
+        f" non_iid_severity={config['non_iid_severity']:.2f},"
         f" clients={config['n_clients']},"
         f" rounds={config['rounds']},"
         f" local_steps={config['local_steps']}"
@@ -441,6 +507,23 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--non-iid-severity",
+        type=float,
+        default=DEFAULT_NON_IID_SEVERITY,
+        help=(
+            "Class-bias strength used when partitioning clients into non-IID shards "
+            "(higher values increase heterogeneity)."
+        ),
+    )
+    parser.add_argument(
+        "--non-iid-sweep",
+        default="",
+        help=(
+            "Comma-separated severities to run in one command. "
+            "When provided, overrides --non-iid-severity and returns multi-scenario JSON."
+        ),
+    )
+    parser.add_argument(
         "--json-out",
         default="",
         help="Optional path to write machine-readable JSON metrics.",
@@ -454,30 +537,42 @@ def main() -> None:
 
     if not (0.0 <= args.dropout_rate < 1.0):
         parser.error("--dropout-rate must be in [0.0, 1.0).")
+    if args.non_iid_severity < 0.0:
+        parser.error("--non-iid-severity must be >= 0.0.")
 
     seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
-    all_results = [run_once(seed, dropout_rate=args.dropout_rate) for seed in seeds]
-    report_config: dict[str, object] = {
-        "seeds": seeds,
-        "dropout_rate": args.dropout_rate,
-        "n_features": DEFAULT_N_FEATURES,
-        "n_clients": DEFAULT_N_CLIENTS,
-        "rounds": DEFAULT_ROUNDS,
-        "local_steps": DEFAULT_LOCAL_STEPS,
-        "batch_size": DEFAULT_BATCH_SIZE,
-        "learning_rate": DEFAULT_LR,
-    }
-    report = aggregate(all_results, config=report_config)
+    if args.non_iid_sweep.strip():
+        severities = [float(s.strip()) for s in args.non_iid_sweep.split(",") if s.strip()]
+        if any(sev < 0.0 for sev in severities):
+            parser.error("--non-iid-sweep values must be >= 0.0.")
+        scenarios = [
+            run_experiment(
+                seeds=seeds,
+                dropout_rate=args.dropout_rate,
+                non_iid_severity=severity,
+            )
+            for severity in severities
+        ]
+        output: dict[str, object] = {
+            "schema_version": 2,
+            "sweep_type": "non_iid_severity",
+            "dropout_rate": args.dropout_rate,
+            "runs_per_scenario": len(seeds),
+            "scenarios": scenarios,
+        }
 
-    if args.dropout_rate > 0.0:
-        no_dropout_results = [run_once(seed, dropout_rate=0.0) for seed in seeds]
-        no_dropout_config = dict(report_config)
-        no_dropout_config["dropout_rate"] = 0.0
-        no_dropout_report = aggregate(no_dropout_results, config=no_dropout_config)
-        report["comparison_vs_no_dropout"] = compare_to_no_dropout(
-            report=report,
-            no_dropout_report=no_dropout_report,
-        )
+        if not args.quiet:
+            summarize_sweep(output)
+        if args.json_out:
+            with open(args.json_out, "w", encoding="utf-8") as f:
+                json.dump(output, f, indent=2, sort_keys=True)
+        return
+
+    report = run_experiment(
+        seeds=seeds,
+        dropout_rate=args.dropout_rate,
+        non_iid_severity=args.non_iid_severity,
+    )
 
     if not args.quiet:
         summarize(report)

@@ -46,6 +46,14 @@ Run a drop-out resilience scenario (with automatic comparison vs no drop-out):
 python3 experiments/fedavg_cpu_only.py --dropout-rate 0.35 --json-out dropout_35_metrics.json
 ```
 
+Run a non-IID severity robustness sweep:
+
+```bash
+python3 experiments/fedavg_cpu_only.py --non-iid-sweep 0.2,1.4,3.0 --json-out non_iid_sweep_metrics.json
+```
+
+A sample sweep summary is available in `reports/non_iid_severity_sweep.md`.
+
 ## Next milestones
 
 See `ROADMAP.md` for phased execution.
