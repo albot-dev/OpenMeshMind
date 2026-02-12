@@ -73,6 +73,19 @@ Retrieval dataset files:
 
 Example retrieval summary: `reports/local_retrieval_baseline.md`.
 
+Run the benchmark suite (latency + memory fields):
+
+```bash
+python3 scripts/benchmark_suite.py --mode full --json-out benchmark_metrics.json
+```
+
+Run reduced benchmark mode (CI-friendly):
+
+```bash
+python3 scripts/benchmark_suite.py --mode reduced --json-out benchmark_metrics.json
+python3 scripts/check_benchmarks.py benchmark_metrics.json --expected-mode reduced
+```
+
 ## Policy docs
 
 - `BASELINE_POLICY.md`

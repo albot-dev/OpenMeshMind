@@ -30,8 +30,24 @@ jobs:
             --min-comm-reduction 50 \
             --expected-schema-version 2
 
+      - name: Run reduced benchmark suite
+        run: |
+          python3 scripts/benchmark_suite.py --mode reduced --quiet --json-out benchmark_metrics.json
+
+      - name: Validate benchmark report
+        run: |
+          python3 scripts/check_benchmarks.py benchmark_metrics.json \
+            --expected-schema-version 1 \
+            --expected-mode reduced
+
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4
         with:
           name: baseline-metrics
           path: baseline_metrics.json
+
+      - name: Upload benchmark metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-metrics
+          path: benchmark_metrics.json
