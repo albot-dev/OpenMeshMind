@@ -1,0 +1,50 @@
+[
+  {
+    "query": "How can we train collaboratively without moving raw user data?",
+    "relevant_id": "doc_01"
+  },
+  {
+    "query": "What method hides individual client updates from the server?",
+    "relevant_id": "doc_03"
+  },
+  {
+    "query": "Why do fewer bits help for device constraints and network traffic?",
+    "relevant_id": "doc_02"
+  },
+  {
+    "query": "What is the term for clients having different local data distributions?",
+    "relevant_id": "doc_04"
+  },
+  {
+    "query": "Which approach keeps models practical on commodity CPUs?",
+    "relevant_id": "doc_05"
+  },
+  {
+    "query": "How do we combine retrieval with generation for grounded answers?",
+    "relevant_id": "doc_06"
+  },
+  {
+    "query": "How can we avoid silent metric regressions in pull requests?",
+    "relevant_id": "doc_08"
+  },
+  {
+    "query": "What kind of governance records licensing and provenance decisions?",
+    "relevant_id": "doc_10"
+  },
+  {
+    "query": "What do we test when clients disappear during a federated round?",
+    "relevant_id": "doc_11"
+  },
+  {
+    "query": "What communication strategies reduce bandwidth in distributed training?",
+    "relevant_id": "doc_12"
+  },
+  {
+    "query": "How should open projects coordinate tasks visibly for contributors?",
+    "relevant_id": "doc_07"
+  },
+  {
+    "query": "Why report tail latency instead of only averages?",
+    "relevant_id": "doc_15"
+  }
+]

@@ -60,6 +60,19 @@ Run with mock secure aggregation (masked update aggregation + overhead metrics):
 python3 experiments/fedavg_cpu_only.py --secure-aggregation --json-out secure_metrics.json
 ```
 
+Run the local retrieval baseline (dependency-light TF-IDF):
+
+```bash
+python3 experiments/local_retrieval_baseline.py --json-out retrieval_metrics.json
+```
+
+Retrieval dataset files:
+
+- `data/retrieval_corpus.json`
+- `data/retrieval_queries.json`
+
+Example retrieval summary: `reports/local_retrieval_baseline.md`.
+
 ## Policy docs
 
 - `BASELINE_POLICY.md`

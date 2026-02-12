@@ -1,0 +1,62 @@
+[
+  {
+    "id": "doc_01",
+    "text": "Federated learning trains models on distributed clients and aggregates updates without centralizing raw data."
+  },
+  {
+    "id": "doc_02",
+    "text": "Quantization reduces model memory and communication cost by representing weights and updates with fewer bits."
+  },
+  {
+    "id": "doc_03",
+    "text": "Secure aggregation masks client updates so a server can recover only an aggregate sum."
+  },
+  {
+    "id": "doc_04",
+    "text": "Non-IID data means each client sees a different data distribution, which can degrade federated optimization."
+  },
+  {
+    "id": "doc_05",
+    "text": "CPU-first model design focuses on low memory use and predictable latency on commodity devices."
+  },
+  {
+    "id": "doc_06",
+    "text": "Retrieval augmented generation combines a retriever with a generator to improve factual grounding."
+  },
+  {
+    "id": "doc_07",
+    "text": "A project board with transparent statuses improves coordination for open-source contributors."
+  },
+  {
+    "id": "doc_08",
+    "text": "Baseline regression checks in CI can prevent silent quality drops and enforce reproducibility."
+  },
+  {
+    "id": "doc_09",
+    "text": "Edge deployment requires careful tradeoffs among latency, battery use, and offline capability."
+  },
+  {
+    "id": "doc_10",
+    "text": "Model governance should document data provenance, licensing constraints, and release decisions."
+  },
+  {
+    "id": "doc_11",
+    "text": "Drop-out simulation in federated rounds measures resilience when some clients fail to report."
+  },
+  {
+    "id": "doc_12",
+    "text": "Communication compression can use sparse updates, quantization, and periodic synchronization."
+  },
+  {
+    "id": "doc_13",
+    "text": "Fairness in distributed systems includes balancing outcomes across high-capacity and low-capacity nodes."
+  },
+  {
+    "id": "doc_14",
+    "text": "Open model ecosystems benefit from clear contribution guides and public decision logs."
+  },
+  {
+    "id": "doc_15",
+    "text": "Latency benchmarks should report median and tail behavior to capture user-facing performance."
+  }
+]
