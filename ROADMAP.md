@@ -8,6 +8,7 @@
   - accessibility (cost per run, memory footprint, latency)
   - decentralization (number/diversity of contributors and nodes)
 - Publish reproducible baselines in this repo.
+- Enforce baseline regression checks in CI.
 
 ## Phase 2: Distributed learning on commodity hardware
 

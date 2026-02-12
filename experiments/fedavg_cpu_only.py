@@ -12,6 +12,8 @@ It is designed to run on very small machines (2 cores / <2 GB RAM).
 
 from __future__ import annotations
 
+import argparse
+import json
 import math
 import random
 import statistics
@@ -270,23 +272,48 @@ def run_once(seed: int) -> dict[str, RunResult]:
     }
 
 
-def summarize(results: list[dict[str, RunResult]]) -> None:
+def aggregate(results: list[dict[str, RunResult]]) -> dict[str, object]:
+    methods: dict[str, dict[str, float | int]] = {}
     names = ["centralized", "fedavg_fp32", "fedavg_int8"]
-    print("CPU-only experiment: centralized vs federated logistic regression")
-    print("Metrics over 3 seeds (mean +/- stdev)\n")
-    print(f"{'Method':<16} {'Acc':<16} {'Runtime':<16} {'Uplink/client net'}")
-    print("-" * 72)
 
     for name in names:
         accs = [r[name].accuracy for r in results]
         times = [r[name].runtime_sec for r in results]
         bytes_up = [r[name].uplink_bytes for r in results]
+        methods[name] = {
+            "accuracy_mean": statistics.mean(accs),
+            "accuracy_std": statistics.pstdev(accs),
+            "runtime_mean_sec": statistics.mean(times),
+            "runtime_std_sec": statistics.pstdev(times),
+            "uplink_mean_bytes": int(statistics.mean(bytes_up)),
+        }
 
-        acc_mean = statistics.mean(accs)
-        acc_std = statistics.pstdev(accs)
-        time_mean = statistics.mean(times)
-        time_std = statistics.pstdev(times)
-        bytes_mean = int(statistics.mean(bytes_up))
+    fp = methods["fedavg_fp32"]["uplink_mean_bytes"]
+    q8 = methods["fedavg_int8"]["uplink_mean_bytes"]
+    savings = (1.0 - q8 / fp) * 100.0 if fp else 0.0
+
+    return {
+        "runs": len(results),
+        "methods": methods,
+        "communication_reduction_percent": savings,
+    }
+
+
+def summarize(report: dict[str, object]) -> None:
+    methods = report["methods"]
+    names = ["centralized", "fedavg_fp32", "fedavg_int8"]
+    print("CPU-only experiment: centralized vs federated logistic regression")
+    print(f"Metrics over {report['runs']} seeds (mean +/- stdev)\n")
+    print(f"{'Method':<16} {'Acc':<16} {'Runtime':<16} {'Uplink/client net'}")
+    print("-" * 72)
+
+    for name in names:
+        row = methods[name]
+        acc_mean = row["accuracy_mean"]
+        acc_std = row["accuracy_std"]
+        time_mean = row["runtime_mean_sec"]
+        time_std = row["runtime_std_sec"]
+        bytes_mean = row["uplink_mean_bytes"]
 
         print(
             f"{name:<16} "
@@ -295,16 +322,39 @@ def summarize(results: list[dict[str, RunResult]]) -> None:
             f"{fmt_bytes(bytes_mean)}"
         )
 
-    fp = int(statistics.mean([r["fedavg_fp32"].uplink_bytes for r in results]))
-    q8 = int(statistics.mean([r["fedavg_int8"].uplink_bytes for r in results]))
-    savings = (1.0 - q8 / fp) * 100.0 if fp else 0.0
+    savings = report["communication_reduction_percent"]
     print("\nCommunication reduction from int8 client updates: " f"{savings:.1f}%")
 
 
 def main() -> None:
-    seeds = [7, 17, 27]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--seeds",
+        default="7,17,27",
+        help="Comma-separated list of integer seeds (default: 7,17,27).",
+    )
+    parser.add_argument(
+        "--json-out",
+        default="",
+        help="Optional path to write machine-readable JSON metrics.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress the human-readable table output.",
+    )
+    args = parser.parse_args()
+
+    seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
     all_results = [run_once(seed) for seed in seeds]
-    summarize(all_results)
+    report = aggregate(all_results)
+
+    if not args.quiet:
+        summarize(report)
+
+    if args.json_out:
+        with open(args.json_out, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, sort_keys=True)
 
 
 if __name__ == "__main__":

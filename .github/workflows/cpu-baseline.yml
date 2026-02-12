@@ -1,0 +1,36 @@
+name: CPU Baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run CPU-only baseline experiment
+        run: |
+          python3 experiments/fedavg_cpu_only.py --json-out baseline_metrics.json
+
+      - name: Validate baseline thresholds
+        run: |
+          python3 scripts/check_baseline.py baseline_metrics.json \
+            --max-accuracy-drop 0.03 \
+            --min-int8-accuracy 0.82 \
+            --min-comm-reduction 50
+
+      - name: Upload baseline metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-metrics
+          path: baseline_metrics.json

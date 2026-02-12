@@ -1,4 +1,4 @@
-# ai4all
+# OpenMeshMind
 
 Practical work toward broadly accessible AI systems that do not depend on specialized hardware or centralized control.
 
@@ -26,6 +26,18 @@ The project direction is:
 
 ```bash
 python3 experiments/fedavg_cpu_only.py
+```
+
+Generate machine-readable metrics:
+
+```bash
+python3 experiments/fedavg_cpu_only.py --json-out baseline_metrics.json
+```
+
+Validate thresholds:
+
+```bash
+python3 scripts/check_baseline.py baseline_metrics.json
 ```
 
 ## Next milestones
