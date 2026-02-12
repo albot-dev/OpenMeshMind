@@ -33,10 +33,24 @@ def main() -> int:
         default=50.0,
         help="Minimum communication reduction percent from int8 (default: 50).",
     )
+    parser.add_argument(
+        "--expected-schema-version",
+        type=int,
+        default=2,
+        help="Expected metrics schema version (default: 2).",
+    )
     args = parser.parse_args()
 
     with open(args.metrics_json, "r", encoding="utf-8") as f:
         report = json.load(f)
+
+    if report.get("schema_version") != args.expected_schema_version:
+        print(
+            "Validation failed:\n"
+            f"- schema_version {report.get('schema_version')} does not match "
+            f"expected {args.expected_schema_version}"
+        )
+        return 1
 
     methods = report["methods"]
     acc_central = methods["centralized"]["accuracy_mean"]

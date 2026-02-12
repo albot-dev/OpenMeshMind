@@ -27,7 +27,8 @@ jobs:
           python3 scripts/check_baseline.py baseline_metrics.json \
             --max-accuracy-drop 0.03 \
             --min-int8-accuracy 0.82 \
-            --min-comm-reduction 50
+            --min-comm-reduction 50 \
+            --expected-schema-version 2
 
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4

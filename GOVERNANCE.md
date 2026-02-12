@@ -20,6 +20,15 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
 - No release claims without reproducible scripts and metrics.
 - Regressions in baseline accessibility metrics must be justified and documented.
 
+## Baseline threshold governance
+
+- Baseline metric schema/version policy is defined in `BASELINE_POLICY.md`.
+- Threshold changes require:
+  - a linked GitHub issue with rationale
+  - reproducible before/after metrics
+  - corresponding updates to CI checks
+  - a `CHANGELOG.md` note with old/new threshold values
+
 ## Maintainer responsibility
 
 - Keep contribution pathways open and documented.

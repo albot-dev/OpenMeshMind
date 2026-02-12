@@ -60,6 +60,12 @@ Run with mock secure aggregation (masked update aggregation + overhead metrics):
 python3 experiments/fedavg_cpu_only.py --secure-aggregation --json-out secure_metrics.json
 ```
 
+## Policy docs
+
+- `BASELINE_POLICY.md`
+- `GOVERNANCE.md`
+- `CHANGELOG.md`
+
 ## Next milestones
 
 See `ROADMAP.md` for phased execution.
