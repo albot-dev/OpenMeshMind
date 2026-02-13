@@ -3,7 +3,7 @@
 ## Board
 
 - GitHub Project: <https://github.com/users/albot-dev/projects/1>
-- Scope: Phase 1 foundation execution and tracking
+- Scope: Ongoing execution tracking across roadmap phases (completed Phases 1-3 and next-phase planning)
 
 ## Ownership
 
