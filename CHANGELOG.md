@@ -21,6 +21,9 @@ All notable changes to OpenMeshMind are documented here.
 - CI now validates classification metrics and uploads classification artifact.
 - Federated utility classification experiment with `fp32`, `int8`, and `sparse` modes.
 - Federated utility snapshot report: `reports/fedavg_classification_utility.md`.
+- Utility fairness stress sweep support in federated classification experiment.
+- Utility fairness validator script: `scripts/check_utility_fairness.py`.
+- Utility fairness snapshot report: `reports/fedavg_classification_fairness.md`.
 
 ## 2026-02-12
 

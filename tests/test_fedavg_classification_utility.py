@@ -75,3 +75,28 @@ class FedAvgClassificationUtilityTests(unittest.TestCase):
                 non_iid_severity=1.0,
                 sparse_ratio=0.25,
             )
+
+    def test_capacity_fairness_metrics_present(self) -> None:
+        report = utility.run_experiment(
+            seeds=[7],
+            modes=["fp32", "int8", "sparse"],
+            samples_per_label=12,
+            test_fraction=0.25,
+            n_clients=4,
+            rounds=3,
+            local_steps=2,
+            batch_size=6,
+            learning_rate=0.2,
+            non_iid_severity=1.0,
+            sparse_ratio=0.25,
+            dropout_rate=0.1,
+            client_capacities=[1.0, 0.8, 0.6, 0.4],
+            round_deadline=3.0,
+            capacity_jitter=0.0,
+        )
+
+        fp32_fair = report["methods"]["fedavg_fp32"]["fairness"]
+        int8_fair = report["methods"]["fedavg_int8"]["fairness"]
+        self.assertIn("contribution_rate_gap_mean", fp32_fair)
+        self.assertIn("contribution_jain_index_mean", int8_fair)
+        self.assertGreater(fp32_fair["contribution_rate_gap_mean"], 0.0)

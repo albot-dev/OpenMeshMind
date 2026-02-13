@@ -86,6 +86,19 @@ python3 experiments/fedavg_classification_utility.py --json-out utility_fedavg_m
 
 Sample federated utility summary: `reports/fedavg_classification_utility.md`.
 
+Run utility fairness stress checks (capacity + churn):
+
+```bash
+python3 experiments/fedavg_classification_utility.py \
+  --simulate-client-capacity \
+  --dropout-rate 0.1 \
+  --round-deadline-sweep 4.0,4.2 \
+  --json-out utility_fairness_metrics.json
+python3 scripts/check_utility_fairness.py utility_fairness_metrics.json
+```
+
+Utility fairness stress summary: `reports/fedavg_classification_fairness.md`.
+
 Run the local retrieval baseline (dependency-light TF-IDF):
 
 ```bash

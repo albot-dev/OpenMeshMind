@@ -63,6 +63,23 @@ jobs:
             --min-int8-jain-improvement 0.05 \
             --min-int8-contributed-clients-gain 0.5
 
+      - name: Run utility fairness stress scenario
+        run: |
+          python3 experiments/fedavg_classification_utility.py \
+            --simulate-client-capacity \
+            --dropout-rate 0.1 \
+            --round-deadline-sweep 4.0,4.2 \
+            --quiet \
+            --json-out utility_fairness_metrics.json
+
+      - name: Validate utility fairness metrics
+        run: |
+          python3 scripts/check_utility_fairness.py utility_fairness_metrics.json \
+            --expected-schema-version 1 \
+            --min-int8-jain-improvement 0.05 \
+            --min-int8-gap-improvement 0.05 \
+            --min-int8-contributed-clients-gain 0.5
+
       - name: Run reduced benchmark suite
         run: |
           python3 scripts/benchmark_suite.py --mode reduced --quiet --json-out benchmark_metrics.json
@@ -96,3 +113,9 @@ jobs:
         with:
           name: classification-metrics
           path: classification_metrics.json
+
+      - name: Upload utility fairness metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: utility-fairness-metrics
+          path: utility_fairness_metrics.json

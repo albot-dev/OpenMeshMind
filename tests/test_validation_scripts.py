@@ -10,6 +10,7 @@ from scripts import check_baseline
 from scripts import check_benchmarks
 from scripts import check_classification
 from scripts import check_fairness
+from scripts import check_utility_fairness
 
 
 class ValidationScriptTests(unittest.TestCase):
@@ -231,6 +232,74 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_classification.main,
                 ["check_classification.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_utility_fairness_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "utility_fairness_ok.json",
+                {
+                    "schema_version": 1,
+                    "methods": {
+                        "fedavg_fp32": {
+                            "fairness": {
+                                "contribution_jain_index_mean": 0.70,
+                                "contribution_rate_gap_mean": 0.90,
+                                "contributed_clients_per_round_mean_mean": 4.5,
+                            },
+                            "fairness_clients": [{"client_index": 0}],
+                        },
+                        "fedavg_int8": {
+                            "fairness": {
+                                "contribution_jain_index_mean": 0.90,
+                                "contribution_rate_gap_mean": 0.50,
+                                "contributed_clients_per_round_mean_mean": 5.5,
+                            },
+                            "fairness_clients": [{"client_index": 0}],
+                        },
+                    },
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "utility_fairness_bad.json",
+                {
+                    "schema_version": 1,
+                    "methods": {
+                        "fedavg_fp32": {
+                            "fairness": {
+                                "contribution_jain_index_mean": 0.90,
+                                "contribution_rate_gap_mean": 0.30,
+                                "contributed_clients_per_round_mean_mean": 6.0,
+                            },
+                            "fairness_clients": [{"client_index": 0}],
+                        },
+                        "fedavg_int8": {
+                            "fairness": {
+                                "contribution_jain_index_mean": 0.88,
+                                "contribution_rate_gap_mean": 0.32,
+                                "contributed_clients_per_round_mean_mean": 6.1,
+                            },
+                            "fairness_clients": [{"client_index": 0}],
+                        },
+                    },
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_utility_fairness.main,
+                ["check_utility_fairness.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_utility_fairness.main,
+                ["check_utility_fairness.py", str(invalid)],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

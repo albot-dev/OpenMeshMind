@@ -36,6 +36,10 @@ class RunResult:
     macro_f1: float
     runtime_sec: float
     uplink_bytes: int
+    participation_rate: float | None = None
+    zero_client_rounds: int = 0
+    fairness_metrics: dict[str, float] | None = None
+    fairness_clients: list[dict[str, float | int]] | None = None
 
 
 def softmax(logits: list[float]) -> list[float]:
@@ -278,21 +282,75 @@ def run_fedavg_mode(
     learning_rate: float,
     seed: int,
     sparse_ratio: float,
+    dropout_rate: float = 0.0,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
 ) -> RunResult:
+    if not (0.0 <= dropout_rate < 1.0):
+        raise ValueError("dropout_rate must be in [0.0, 1.0).")
+    if client_capacities is not None and len(client_capacities) != len(clients):
+        raise ValueError("client_capacities length must match number of clients.")
+    if round_deadline <= 0.0:
+        raise ValueError("round_deadline must be > 0.")
+    if not (0.0 <= capacity_jitter < 1.0):
+        raise ValueError("capacity_jitter must be in [0.0, 1.0).")
+
     weights, bias = init_model(n_classes=n_classes, n_features=n_features)
     total_bytes = 0
     rng = random.Random(seed + 700)
+    selected_clients = 0
+    contributed_clients = 0
+    zero_client_rounds = 0
+    per_client_selected_rounds = [0 for _ in clients]
+    per_client_contributed_rounds = [0 for _ in clients]
+    per_client_uplink_bytes = [0 for _ in clients]
     t0 = time.perf_counter()
 
     for round_idx in range(rounds):
-        client_sizes = [len(x) for x, _ in clients]
-        active_examples = sum(client_sizes)
+        if dropout_rate <= 0.0:
+            active_indices = list(range(len(clients)))
+        else:
+            active_indices = [idx for idx in range(len(clients)) if rng.random() >= dropout_rate]
+
+        selected_clients += len(active_indices)
+        for idx in active_indices:
+            per_client_selected_rounds[idx] += 1
+        if not active_indices:
+            zero_client_rounds += 1
+            continue
+
+        contributing_indices: list[int] = []
+        if client_capacities is None:
+            contributing_indices = active_indices
+        else:
+            for idx in active_indices:
+                base_capacity = max(client_capacities[idx], 1e-6)
+                jitter = 1.0 + rng.uniform(-capacity_jitter, capacity_jitter)
+                effective_capacity = max(0.05, base_capacity * jitter)
+                normalized_compute = (local_steps / 8.0) / effective_capacity
+                if mode == "fp32":
+                    network_factor = 1.0 / effective_capacity
+                elif mode == "int8":
+                    network_factor = 0.45 / effective_capacity
+                else:
+                    network_factor = 0.60 / effective_capacity
+                if normalized_compute + network_factor <= round_deadline:
+                    contributing_indices.append(idx)
+
+        if not contributing_indices:
+            zero_client_rounds += 1
+            continue
+
+        active_examples = sum(len(clients[idx][0]) for idx in contributing_indices)
         if active_examples == 0:
             raise ValueError("No active examples across clients.")
+        contributed_clients += len(contributing_indices)
 
         aggregate = [0.0] * (n_classes * n_features + n_classes)
         base_vec = flatten_params(weights, bias)
-        for client_idx, (client_x, client_y) in enumerate(clients):
+        for client_idx in contributing_indices:
+            client_x, client_y = clients[client_idx]
             local_weights = [row[:] for row in weights]
             local_bias = list(bias)
             local_rng = random.Random(seed * 1000 + round_idx * 31 + client_idx * 17 + 9)
@@ -314,6 +372,8 @@ def run_fedavg_mode(
                 sparse_ratio=sparse_ratio,
             )
             total_bytes += sent_bytes
+            per_client_uplink_bytes[client_idx] += sent_bytes
+            per_client_contributed_rounds[client_idx] += 1
             weight = len(client_x) / active_examples
             for idx, value in enumerate(restored):
                 aggregate[idx] += weight * value
@@ -333,11 +393,70 @@ def run_fedavg_mode(
         test_y=test_y,
         n_classes=n_classes,
     )
+
+    total_slots = rounds * len(clients)
+    participation_rate = selected_clients / total_slots if total_slots else None
+    fairness_metrics: dict[str, float] | None = None
+    fairness_clients: list[dict[str, float | int]] | None = None
+    if client_capacities is not None:
+        participation_rates: list[float] = []
+        contribution_rates: list[float] = []
+        completion_rates: list[float] = []
+        total_uplink = sum(per_client_uplink_bytes)
+        fairness_clients = []
+        for idx, cap in enumerate(client_capacities):
+            selected_rounds = per_client_selected_rounds[idx]
+            contributed_rounds = per_client_contributed_rounds[idx]
+            client_participation = selected_rounds / rounds if rounds else 0.0
+            client_contribution = contributed_rounds / rounds if rounds else 0.0
+            completion = contributed_rounds / selected_rounds if selected_rounds else 0.0
+            participation_rates.append(client_participation)
+            contribution_rates.append(client_contribution)
+            completion_rates.append(completion)
+            fairness_clients.append(
+                {
+                    "client_index": idx,
+                    "capacity": cap,
+                    "selected_rounds": selected_rounds,
+                    "contributed_rounds": contributed_rounds,
+                    "participation_rate": client_participation,
+                    "contribution_rate": client_contribution,
+                    "completion_rate": completion,
+                    "uplink_share": (
+                        per_client_uplink_bytes[idx] / total_uplink if total_uplink else 0.0
+                    ),
+                }
+            )
+        slowest = min(range(len(client_capacities)), key=lambda idx: client_capacities[idx])
+        fastest = max(range(len(client_capacities)), key=lambda idx: client_capacities[idx])
+        slowest_rate = contribution_rates[slowest]
+        fastest_rate = contribution_rates[fastest]
+        fairness_metrics = {
+            "participation_rate_gap": max(participation_rates) - min(participation_rates),
+            "contribution_rate_gap": max(contribution_rates) - min(contribution_rates),
+            "completion_rate_gap": max(completion_rates) - min(completion_rates),
+            "contribution_jain_index": fed.jain_fairness(contribution_rates),
+            "capacity_contribution_correlation": fed.pearson_correlation(
+                client_capacities,
+                contribution_rates,
+            ),
+            "slowest_fastest_contribution_ratio": (
+                slowest_rate / fastest_rate if fastest_rate > 0.0 else 0.0
+            ),
+            "contributed_clients_per_round_mean": (
+                contributed_clients / rounds if rounds else 0.0
+            ),
+        }
+
     return RunResult(
         accuracy=accuracy,
         macro_f1=macro_f1,
         runtime_sec=runtime,
         uplink_bytes=total_bytes,
+        participation_rate=participation_rate,
+        zero_client_rounds=zero_client_rounds,
+        fairness_metrics=fairness_metrics,
+        fairness_clients=fairness_clients,
     )
 
 
@@ -353,6 +472,10 @@ def run_once(
     learning_rate: float,
     non_iid_severity: float,
     sparse_ratio: float,
+    dropout_rate: float = 0.0,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
 ) -> dict[str, RunResult]:
     rows = cls.generate_dataset(seed=seed, samples_per_label=samples_per_label)
     train_rows, test_rows = cls.stratified_split(rows=rows, seed=seed, test_fraction=test_fraction)
@@ -405,6 +528,10 @@ def run_once(
             learning_rate=learning_rate,
             seed=seed,
             sparse_ratio=sparse_ratio,
+            dropout_rate=dropout_rate,
+            client_capacities=client_capacities,
+            round_deadline=round_deadline,
+            capacity_jitter=capacity_jitter,
         )
     return output
 
@@ -415,7 +542,7 @@ def aggregate(
     modes: list[str],
 ) -> dict[str, object]:
     method_names = ["centralized"] + [f"fedavg_{mode}" for mode in modes]
-    methods: dict[str, dict[str, float | int]] = {}
+    methods: dict[str, dict[str, object]] = {}
 
     for name in method_names:
         acc = [r[name].accuracy for r in results]
@@ -431,6 +558,52 @@ def aggregate(
             "runtime_std_sec": statistics.pstdev(runtime),
             "uplink_mean_bytes": int(statistics.mean(uplink)),
         }
+        participation = [
+            r[name].participation_rate for r in results if r[name].participation_rate is not None
+        ]
+        if participation:
+            methods[name]["participation_rate_mean"] = statistics.mean(participation)
+            methods[name]["participation_rate_std"] = statistics.pstdev(participation)
+            methods[name]["zero_client_rounds_mean"] = statistics.mean(
+                [r[name].zero_client_rounds for r in results]
+            )
+        fairness_runs = [r[name].fairness_metrics for r in results if r[name].fairness_metrics]
+        if fairness_runs:
+            fairness_summary: dict[str, float] = {}
+            for metric in fairness_runs[0]:
+                values = [run[metric] for run in fairness_runs]
+                fairness_summary[f"{metric}_mean"] = statistics.mean(values)
+                fairness_summary[f"{metric}_std"] = statistics.pstdev(values)
+            methods[name]["fairness"] = fairness_summary
+        fairness_clients_runs = [r[name].fairness_clients for r in results if r[name].fairness_clients]
+        if fairness_clients_runs:
+            n_clients = len(fairness_clients_runs[0])
+            clients_aggregate: list[dict[str, float | int]] = []
+            for idx in range(n_clients):
+                per_seed = [run[idx] for run in fairness_clients_runs]
+                clients_aggregate.append(
+                    {
+                        "client_index": idx,
+                        "capacity": per_seed[0]["capacity"],
+                        "selected_rounds_mean": statistics.mean(
+                            [row["selected_rounds"] for row in per_seed]
+                        ),
+                        "contributed_rounds_mean": statistics.mean(
+                            [row["contributed_rounds"] for row in per_seed]
+                        ),
+                        "participation_rate_mean": statistics.mean(
+                            [row["participation_rate"] for row in per_seed]
+                        ),
+                        "contribution_rate_mean": statistics.mean(
+                            [row["contribution_rate"] for row in per_seed]
+                        ),
+                        "completion_rate_mean": statistics.mean(
+                            [row["completion_rate"] for row in per_seed]
+                        ),
+                        "uplink_share_mean": statistics.mean([row["uplink_share"] for row in per_seed]),
+                    }
+                )
+            methods[name]["fairness_clients"] = clients_aggregate
 
     fp32_bytes = methods.get("fedavg_fp32", {}).get("uplink_mean_bytes", 0)
     comm_savings: dict[str, float] = {}
@@ -474,6 +647,10 @@ def run_experiment(
     learning_rate: float,
     non_iid_severity: float,
     sparse_ratio: float,
+    dropout_rate: float = 0.0,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
 ) -> dict[str, object]:
     valid_modes = {"fp32", "int8", "sparse"}
     if not modes:
@@ -497,6 +674,10 @@ def run_experiment(
             learning_rate=learning_rate,
             non_iid_severity=non_iid_severity,
             sparse_ratio=sparse_ratio,
+            dropout_rate=dropout_rate,
+            client_capacities=client_capacities,
+            round_deadline=round_deadline,
+            capacity_jitter=capacity_jitter,
         )
         for seed in seeds
     ]
@@ -512,7 +693,12 @@ def run_experiment(
         "learning_rate": learning_rate,
         "non_iid_severity": non_iid_severity,
         "sparse_ratio": sparse_ratio,
+        "dropout_rate": dropout_rate,
     }
+    if client_capacities is not None:
+        config["client_capacities"] = client_capacities
+        config["round_deadline"] = round_deadline
+        config["capacity_jitter"] = capacity_jitter
     return aggregate(results=all_results, config=config, modes=modes)
 
 
@@ -524,6 +710,14 @@ def summarize(report: dict[str, object]) -> None:
         f"clients={config['n_clients']}, rounds={config['rounds']}, "
         f"local_steps={config['local_steps']}"
     )
+    if "client_capacities" in config:
+        print(
+            "Capacity simulation:"
+            f" dropout_rate={config['dropout_rate']:.2f},"
+            f" deadline={config['round_deadline']:.2f},"
+            f" jitter={config['capacity_jitter']:.2f},"
+            f" capacities={config['client_capacities']}"
+        )
     print(f"{'Method':<16} {'Acc':<16} {'Macro-F1':<16} {'Runtime':<14} {'Uplink'}")
     print("-" * 88)
     for method, metrics in report["methods"].items():
@@ -534,6 +728,20 @@ def summarize(report: dict[str, object]) -> None:
             f"{metrics['runtime_mean_sec']:.3f}s   "
             f"{int(metrics['uplink_mean_bytes'])} B"
         )
+        if "participation_rate_mean" in metrics:
+            print(
+                " " * 16
+                + f"participation={metrics['participation_rate_mean']:.2%}, "
+                + f"zero-rounds={metrics['zero_client_rounds_mean']:.2f}"
+            )
+        if "fairness" in metrics:
+            fair = metrics["fairness"]
+            print(
+                " " * 16
+                + f"fairness_gap={fair['contribution_rate_gap_mean']:.2%}, "
+                + f"jain={fair['contribution_jain_index_mean']:.3f}, "
+                + f"cap-corr={fair['capacity_contribution_correlation_mean']:.3f}"
+            )
 
     if report["communication_savings_percent"]:
         print("\nCommunication savings vs fp32:")
@@ -542,6 +750,33 @@ def summarize(report: dict[str, object]) -> None:
     print("\nQuality drop vs centralized:")
     for key, value in report["quality_drop_vs_centralized"].items():
         print(f"- {key}: {value:+.4f}")
+
+
+def summarize_sweep(sweep_report: dict[str, object]) -> None:
+    print("Utility fairness stress sweep (round_deadline)\n")
+    print(
+        f"dropout_rate={sweep_report['dropout_rate']:.2f}, "
+        f"capacity_jitter={sweep_report['capacity_jitter']:.2f}, "
+        f"scenarios={len(sweep_report['scenarios'])}, "
+        f"runs_per_scenario={sweep_report['runs_per_scenario']}"
+    )
+    print(
+        f"{'Deadline':<10} {'fp32_gap':<10} {'int8_gap':<10} "
+        f"{'int8_jain':<10} {'int8_save':<10}"
+    )
+    print("-" * 62)
+    for scenario in sweep_report["scenarios"]:
+        cfg = scenario["config"]
+        fp32 = scenario["methods"]["fedavg_fp32"]["fairness"]
+        int8 = scenario["methods"]["fedavg_int8"]["fairness"]
+        save = scenario["communication_savings_percent"].get("int8_vs_fp32_percent", 0.0)
+        print(
+            f"{cfg['round_deadline']:<10.2f} "
+            f"{fp32['contribution_rate_gap_mean']:<10.3f} "
+            f"{int8['contribution_rate_gap_mean']:<10.3f} "
+            f"{int8['contribution_jain_index_mean']:<10.3f} "
+            f"{save:<10.2f}"
+        )
 
 
 def main() -> None:
@@ -611,6 +846,45 @@ def main() -> None:
         help="Top-k sparse ratio for sparse mode in (0,1] (default: 0.2).",
     )
     parser.add_argument(
+        "--dropout-rate",
+        type=float,
+        default=0.0,
+        help="Per-client dropout rate per round in [0,1) (default: 0.0).",
+    )
+    parser.add_argument(
+        "--simulate-client-capacity",
+        action="store_true",
+        help="Enable heterogeneous client capacity simulation with a default profile.",
+    )
+    parser.add_argument(
+        "--client-capacities",
+        default="",
+        help=(
+            "Optional comma-separated client capacities (positive floats). "
+            "Must match --n-clients length."
+        ),
+    )
+    parser.add_argument(
+        "--round-deadline",
+        type=float,
+        default=4.2,
+        help="Normalized round deadline used in capacity simulation (default: 4.2).",
+    )
+    parser.add_argument(
+        "--capacity-jitter",
+        type=float,
+        default=0.1,
+        help="Relative per-round capacity jitter in [0,1) (default: 0.1).",
+    )
+    parser.add_argument(
+        "--round-deadline-sweep",
+        default="",
+        help=(
+            "Optional comma-separated round_deadline values for fairness stress sweep. "
+            "Requires capacity simulation."
+        ),
+    )
+    parser.add_argument(
         "--json-out",
         default="",
         help="Optional path to write machine-readable JSON report.",
@@ -638,9 +912,72 @@ def main() -> None:
         parser.error("--non-iid-severity must be >= 0.")
     if not (0.0 < args.sparse_ratio <= 1.0):
         parser.error("--sparse-ratio must be in (0,1].")
+    if not (0.0 <= args.dropout_rate < 1.0):
+        parser.error("--dropout-rate must be in [0,1).")
+    if args.round_deadline <= 0.0:
+        parser.error("--round-deadline must be > 0.")
+    if not (0.0 <= args.capacity_jitter < 1.0):
+        parser.error("--capacity-jitter must be in [0,1).")
 
     seeds = [int(part.strip()) for part in args.seeds.split(",") if part.strip()]
     modes = [part.strip() for part in args.modes.split(",") if part.strip()]
+    client_capacities: list[float] | None = None
+    if args.client_capacities.strip():
+        client_capacities = [float(part.strip()) for part in args.client_capacities.split(",") if part.strip()]
+    elif args.simulate_client_capacity:
+        if args.n_clients == 6:
+            client_capacities = [1.0, 0.9, 0.75, 0.6, 0.45, 0.35]
+        else:
+            client_capacities = [max(0.2, 1.0 - idx * 0.1) for idx in range(args.n_clients)]
+    if client_capacities is not None:
+        if len(client_capacities) != args.n_clients:
+            parser.error("--client-capacities must have exactly --n-clients values.")
+        if any(value <= 0.0 for value in client_capacities):
+            parser.error("--client-capacities values must be > 0.")
+
+    if args.round_deadline_sweep.strip():
+        if client_capacities is None:
+            parser.error("--round-deadline-sweep requires capacity simulation.")
+        deadlines = [
+            float(part.strip()) for part in args.round_deadline_sweep.split(",") if part.strip()
+        ]
+        if any(value <= 0.0 for value in deadlines):
+            parser.error("--round-deadline-sweep values must be > 0.")
+        scenarios = [
+            run_experiment(
+                seeds=seeds,
+                modes=modes,
+                samples_per_label=args.samples_per_label,
+                test_fraction=args.test_fraction,
+                n_clients=args.n_clients,
+                rounds=args.rounds,
+                local_steps=args.local_steps,
+                batch_size=args.batch_size,
+                learning_rate=args.learning_rate,
+                non_iid_severity=args.non_iid_severity,
+                sparse_ratio=args.sparse_ratio,
+                dropout_rate=args.dropout_rate,
+                client_capacities=client_capacities,
+                round_deadline=deadline,
+                capacity_jitter=args.capacity_jitter,
+            )
+            for deadline in deadlines
+        ]
+        sweep_report: dict[str, object] = {
+            "schema_version": 1,
+            "sweep_type": "round_deadline",
+            "dropout_rate": args.dropout_rate,
+            "capacity_jitter": args.capacity_jitter,
+            "runs_per_scenario": len(seeds),
+            "scenarios": scenarios,
+        }
+        if not args.quiet:
+            summarize_sweep(sweep_report)
+        if args.json_out:
+            with open(args.json_out, "w", encoding="utf-8") as f:
+                json.dump(sweep_report, f, indent=2, sort_keys=True)
+        return
+
     report = run_experiment(
         seeds=seeds,
         modes=modes,
@@ -653,6 +990,10 @@ def main() -> None:
         learning_rate=args.learning_rate,
         non_iid_severity=args.non_iid_severity,
         sparse_ratio=args.sparse_ratio,
+        dropout_rate=args.dropout_rate,
+        client_capacities=client_capacities,
+        round_deadline=args.round_deadline,
+        capacity_jitter=args.capacity_jitter,
     )
     if not args.quiet:
         summarize(report)
