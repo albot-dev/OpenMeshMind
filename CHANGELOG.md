@@ -19,6 +19,8 @@ All notable changes to OpenMeshMind are documented here.
 - Classification validator script: `scripts/check_classification.py`.
 - Benchmark suite now includes `classification_baseline` task in reduced/full modes.
 - CI now validates classification metrics and uploads classification artifact.
+- Federated utility classification experiment with `fp32`, `int8`, and `sparse` modes.
+- Federated utility snapshot report: `reports/fedavg_classification_utility.md`.
 
 ## 2026-02-12
 

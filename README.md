@@ -78,6 +78,14 @@ python3 scripts/check_classification.py classification_metrics.json
 
 Sample classification summary: `reports/local_classification_baseline.md`.
 
+Run federated utility classification (fp32/int8/sparse):
+
+```bash
+python3 experiments/fedavg_classification_utility.py --json-out utility_fedavg_metrics.json
+```
+
+Sample federated utility summary: `reports/fedavg_classification_utility.md`.
+
 Run the local retrieval baseline (dependency-light TF-IDF):
 
 ```bash
