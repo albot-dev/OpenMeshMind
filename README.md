@@ -156,7 +156,6 @@ See `ROADMAP.md` for phased execution.
 - Project board: <https://github.com/users/albot-dev/projects/1>
 - Active milestone (Phase 4): <https://github.com/albot-dev/OpenMeshMind/milestone/4>
 - Current issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/15>
   - <https://github.com/albot-dev/OpenMeshMind/issues/16>
   - <https://github.com/albot-dev/OpenMeshMind/issues/17>
   - <https://github.com/albot-dev/OpenMeshMind/issues/18>
@@ -180,3 +179,4 @@ See `ROADMAP.md` for phased execution.
   - <https://github.com/albot-dev/OpenMeshMind/issues/12>
   - <https://github.com/albot-dev/OpenMeshMind/issues/13>
   - <https://github.com/albot-dev/OpenMeshMind/issues/14>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/15>
