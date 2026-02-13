@@ -163,16 +163,15 @@ See `ROADMAP.md` for phased execution.
 ## Work tracking
 
 - Project board: <https://github.com/users/albot-dev/projects/1>
-- Active milestone (Phase 4): <https://github.com/albot-dev/OpenMeshMind/milestone/4>
+- Active milestone (Phase 5): <https://github.com/albot-dev/OpenMeshMind/milestone/5>
 - Current issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/16>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/17>
   - <https://github.com/albot-dev/OpenMeshMind/issues/18>
   - <https://github.com/albot-dev/OpenMeshMind/issues/19>
   - <https://github.com/albot-dev/OpenMeshMind/issues/20>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Completed Phase 2 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/2>
 - Completed Phase 3 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/3>
+- Completed Phase 4 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/4>
 - Completed issues:
   - <https://github.com/albot-dev/OpenMeshMind/issues/1>
   - <https://github.com/albot-dev/OpenMeshMind/issues/2>
@@ -189,3 +188,5 @@ See `ROADMAP.md` for phased execution.
   - <https://github.com/albot-dev/OpenMeshMind/issues/13>
   - <https://github.com/albot-dev/OpenMeshMind/issues/14>
   - <https://github.com/albot-dev/OpenMeshMind/issues/15>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/16>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/17>
