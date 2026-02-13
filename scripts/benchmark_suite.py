@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import platform
 import resource
 import subprocess
@@ -79,10 +78,34 @@ def run_retrieval_task(mode: str) -> dict[str, object]:
     }
 
 
+def run_classification_task(mode: str) -> dict[str, object]:
+    from experiments import local_classification_baseline as classification
+
+    report = classification.run_classification(
+        seed=7,
+        samples_per_label=20 if mode == "reduced" else 60,
+        test_fraction=0.2,
+        steps=900 if mode == "reduced" else 2200,
+        learning_rate=0.18,
+        measure_latency=True,
+    )
+    return {
+        "task": "classification_baseline",
+        "config": report["config"],
+        "metrics": {
+            "accuracy": report["metrics"]["accuracy"],
+            "macro_f1": report["metrics"]["macro_f1"],
+            "latency_mean_ms": report["metrics"]["latency_mean_ms"],
+            "train_runtime_sec": report["metrics"]["train_runtime_sec"],
+        },
+    }
+
+
 def run_single_task(task: str, mode: str) -> dict[str, object]:
     task_map = {
         "fedavg_baseline": run_fedavg_task,
         "retrieval_baseline": run_retrieval_task,
+        "classification_baseline": run_classification_task,
     }
     runner = task_map.get(task)
     if runner is None:
@@ -128,7 +151,7 @@ def call_internal_task(task: str, mode: str) -> dict[str, object]:
 
 
 def run_suite(mode: str, repeats: int) -> dict[str, object]:
-    tasks = ["fedavg_baseline", "retrieval_baseline"]
+    tasks = ["fedavg_baseline", "retrieval_baseline", "classification_baseline"]
     benchmark_entries: list[dict[str, object]] = []
     total_start = time.perf_counter()
 
@@ -187,6 +210,11 @@ def summarize(report: dict[str, object]) -> None:
             key_metric = (
                 f"int8_acc={payload['metrics']['fedavg_int8_accuracy']:.4f}, "
                 f"comm_save={payload['metrics']['communication_reduction_percent']:.2f}%"
+            )
+        elif entry["name"] == "classification_baseline":
+            key_metric = (
+                f"acc={payload['metrics']['accuracy']:.4f}, "
+                f"f1={payload['metrics']['macro_f1']:.4f}"
             )
         else:
             key_metric = (

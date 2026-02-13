@@ -8,6 +8,7 @@ from unittest import mock
 
 from scripts import check_baseline
 from scripts import check_benchmarks
+from scripts import check_classification
 from scripts import check_fairness
 
 
@@ -184,6 +185,52 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_fairness.main,
                 ["check_fairness.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_classification_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "classification_ok.json",
+                {
+                    "schema_version": 1,
+                    "counts": {"labels": ["a", "b", "c"]},
+                    "metrics": {
+                        "accuracy": 0.93,
+                        "macro_f1": 0.91,
+                        "train_runtime_sec": 0.5,
+                        "latency_mean_ms": 0.02,
+                    },
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "classification_bad.json",
+                {
+                    "schema_version": 1,
+                    "counts": {"labels": ["a"]},
+                    "metrics": {
+                        "accuracy": 0.70,
+                        "macro_f1": 0.60,
+                        "train_runtime_sec": 3.2,
+                        "latency_mean_ms": 2.5,
+                    },
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_classification.main,
+                ["check_classification.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_classification.main,
+                ["check_classification.py", str(invalid)],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

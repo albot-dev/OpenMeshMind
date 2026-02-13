@@ -34,6 +34,21 @@ jobs:
             --min-comm-reduction 50 \
             --expected-schema-version 2
 
+      - name: Run local classification baseline
+        run: |
+          python3 experiments/local_classification_baseline.py \
+            --quiet \
+            --json-out classification_metrics.json
+
+      - name: Validate classification metrics
+        run: |
+          python3 scripts/check_classification.py classification_metrics.json \
+            --expected-schema-version 1 \
+            --min-accuracy 0.85 \
+            --min-macro-f1 0.85 \
+            --max-train-runtime-sec 2.0 \
+            --max-latency-mean-ms 1.0
+
       - name: Run capacity fairness scenario
         run: |
           python3 experiments/fedavg_cpu_only.py \
@@ -75,3 +90,9 @@ jobs:
         with:
           name: fairness-metrics
           path: fairness_metrics.json
+
+      - name: Upload classification metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: classification-metrics
+          path: classification_metrics.json

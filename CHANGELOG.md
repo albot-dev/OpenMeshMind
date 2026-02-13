@@ -16,6 +16,9 @@ All notable changes to OpenMeshMind are documented here.
 - CI fairness scenario + validation gate with uploaded fairness artifact.
 - CPU-only local classification utility baseline (`experiments/local_classification_baseline.py`).
 - Classification baseline snapshot report: `reports/local_classification_baseline.md`.
+- Classification validator script: `scripts/check_classification.py`.
+- Benchmark suite now includes `classification_baseline` task in reduced/full modes.
+- CI now validates classification metrics and uploads classification artifact.
 
 ## 2026-02-12
 

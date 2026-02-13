@@ -26,6 +26,7 @@ python3 scripts/check_baseline.py baseline_metrics.json
 python3 experiments/fedavg_cpu_only.py --simulate-client-capacity --quiet --json-out fairness_metrics.json
 python3 scripts/check_fairness.py fairness_metrics.json
 python3 experiments/local_classification_baseline.py --json-out classification_metrics.json
+python3 scripts/check_classification.py classification_metrics.json
 ```
 
 ## Pull request expectations

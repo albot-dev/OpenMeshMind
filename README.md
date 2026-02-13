@@ -73,6 +73,7 @@ Run the local classification utility baseline (CPU-only, dependency-light):
 
 ```bash
 python3 experiments/local_classification_baseline.py --json-out classification_metrics.json
+python3 scripts/check_classification.py classification_metrics.json
 ```
 
 Sample classification summary: `reports/local_classification_baseline.md`.
