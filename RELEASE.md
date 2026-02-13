@@ -20,6 +20,7 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 - `PATCH`: non-breaking fixes and reproducibility improvements.
 - `MINOR`: new additive experiments/metrics/workflows without breaking schema contracts.
 - `MAJOR`: breaking schema or compatibility changes; requires explicit migration notes.
+- Detailed schema/version compatibility rules are defined in `VERSIONING_POLICY.md`.
 
 ## Tag and publish
 
@@ -46,3 +47,10 @@ git push origin v0.1.0
 - `utility_fairness_metrics.json`
 - `smoke_summary.json`
 - `SHA256SUMS.txt`
+
+## Release notes minimum content
+
+- Link to `CHANGELOG.md` section for the release.
+- Any schema version change with migration notes.
+- Any threshold/governance change with rationale.
+- Validation commands used before tagging.

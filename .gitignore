@@ -10,4 +10,6 @@ baseline_metrics.json
 baseline_results.json
 *_metrics.json
 smoke_summary.json
+reports/weekly_status.md
+reports/weekly_artifacts.tgz
 .env

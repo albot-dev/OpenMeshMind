@@ -136,10 +136,19 @@ Runtime/memory expectations and troubleshooting: `reports/low_end_smoke_path.md`
 
 Release process and tagging workflow: `RELEASE.md`.
 
+Weekly public status generation (report + artifact bundle):
+
+```bash
+python3 scripts/generate_weekly_report.py \
+  --out reports/weekly_status.md \
+  --bundle-out reports/weekly_artifacts.tgz
+```
+
 ## Policy docs
 
 - `LICENSE`
 - `RELEASE.md`
+- `VERSIONING_POLICY.md`
 - `BASELINE_POLICY.md`
 - `GOVERNANCE.md`
 - `DECISION_LOG.md`

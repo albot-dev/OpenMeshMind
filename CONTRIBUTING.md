@@ -43,6 +43,14 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 If a step fails, rerun the exact command shown in smoke output.
 For expected runtime/memory envelopes and troubleshooting notes, see `reports/low_end_smoke_path.md`.
 
+## Weekly reporting
+
+Generate the public weekly status file and artifact bundle:
+
+```bash
+python3 scripts/generate_weekly_report.py --out reports/weekly_status.md --bundle-out reports/weekly_artifacts.tgz
+```
+
 ## Pull request expectations
 
 - State the problem and expected user impact.

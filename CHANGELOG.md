@@ -30,6 +30,9 @@ All notable changes to OpenMeshMind are documented here.
 - Added explicit OSS license: `LICENSE` (MIT).
 - Added release process guide: `RELEASE.md`.
 - Added tag-triggered release workflow: `.github/workflows/release.yml`.
+- Added weekly reporting generator and bundle path: `scripts/generate_weekly_report.py`.
+- Added weekly report template: `reports/WEEKLY_STATUS_TEMPLATE.md`.
+- Added versioning and schema compatibility policy: `VERSIONING_POLICY.md`.
 
 ## 2026-02-12
 
