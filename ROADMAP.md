@@ -40,3 +40,8 @@
   - fairness across node capabilities
   - quality vs centralized baseline
 - Publish periodic open reports.
+- Preparation artifacts in this repo:
+  - `PILOT_NODE.md`
+  - `PILOT_OPERATIONS.md`
+  - `schemas/pilot_metrics.schema.v1.json`
+  - `reports/PILOT_STATUS_TEMPLATE.md`

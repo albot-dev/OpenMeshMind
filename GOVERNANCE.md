@@ -37,3 +37,12 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
 - Keep contribution pathways open and documented.
 - Prevent opaque dependencies from becoming project bottlenecks.
 - Prioritize public-interest use cases over benchmark-only optimization.
+
+## Pilot operations governance
+
+- Volunteer node operations and minimum requirements are documented in `PILOT_NODE.md`.
+- Incident, rollback, severity handling, and escalation rules are documented in `PILOT_OPERATIONS.md`.
+- Pilot metrics contract and validator are tracked in:
+  - `schemas/pilot_metrics.schema.v1.json`
+  - `scripts/check_pilot_metrics.py`
+- Public pilot reporting should use `reports/PILOT_STATUS_TEMPLATE.md`.

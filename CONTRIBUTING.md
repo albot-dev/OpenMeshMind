@@ -43,6 +43,23 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 If a step fails, rerun the exact command shown in smoke output.
 For expected runtime/memory envelopes and troubleshooting notes, see `reports/low_end_smoke_path.md`.
 
+## Pilot node validation
+
+Before pilot-related changes are merged, run:
+
+```bash
+cp pilot/node_config.example.json pilot/node_config.json
+python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
+python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
+python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
+```
+
+Pilot runbook and escalation details:
+
+- `PILOT_NODE.md`
+- `PILOT_OPERATIONS.md`
+- `reports/PILOT_STATUS_TEMPLATE.md`
+
 ## Weekly reporting
 
 Generate the public weekly status file and artifact bundle:

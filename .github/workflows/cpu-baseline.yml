@@ -90,6 +90,19 @@ jobs:
             --expected-schema-version 1 \
             --expected-mode reduced
 
+      - name: Build pilot metrics report
+        run: |
+          python3 scripts/build_pilot_metrics.py \
+            --last-cycle-ok \
+            --step-count 1 \
+            --uptime-ratio-24h 1.0 \
+            --json-out pilot/pilot_metrics.json
+
+      - name: Validate pilot metrics report
+        run: |
+          python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json \
+            --expected-schema-version 1
+
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4
         with:
@@ -119,3 +132,9 @@ jobs:
         with:
           name: utility-fairness-metrics
           path: utility_fairness_metrics.json
+
+      - name: Upload pilot metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-metrics
+          path: pilot/pilot_metrics.json

@@ -144,6 +144,22 @@ python3 scripts/generate_weekly_report.py \
   --bundle-out reports/weekly_artifacts.tgz
 ```
 
+Run volunteer pilot node cycle and health checks:
+
+```bash
+cp pilot/node_config.example.json pilot/node_config.json
+python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
+python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
+python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
+```
+
+Pilot operations references:
+
+- `PILOT_NODE.md`
+- `PILOT_OPERATIONS.md`
+- `schemas/pilot_metrics.schema.v1.json`
+- `reports/PILOT_STATUS_TEMPLATE.md`
+
 ## Policy docs
 
 - `LICENSE`
@@ -155,6 +171,8 @@ python3 scripts/generate_weekly_report.py \
 - `PROVENANCE_TEMPLATE.md`
 - `CHANGELOG.md`
 - `PROJECTS.md`
+- `PILOT_NODE.md`
+- `PILOT_OPERATIONS.md`
 
 ## Next milestones
 
@@ -163,30 +181,11 @@ See `ROADMAP.md` for phased execution.
 ## Work tracking
 
 - Project board: <https://github.com/users/albot-dev/projects/1>
-- Active milestone (Phase 5): <https://github.com/albot-dev/OpenMeshMind/milestone/5>
-- Current issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/18>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/19>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/20>
+- Open milestones: <https://github.com/albot-dev/OpenMeshMind/milestones?state=open>
+- Closed milestones: <https://github.com/albot-dev/OpenMeshMind/milestones?state=closed>
+- Open issues: <https://github.com/albot-dev/OpenMeshMind/issues?q=is%3Aissue%20state%3Aopen>
+- Closed issues: <https://github.com/albot-dev/OpenMeshMind/issues?q=is%3Aissue%20state%3Aclosed>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Completed Phase 2 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/2>
 - Completed Phase 3 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/3>
 - Completed Phase 4 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/4>
-- Completed issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/1>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/2>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/3>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/4>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/5>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/6>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/7>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/8>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/9>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/10>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/11>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/12>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/13>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/14>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/15>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/16>
-  - <https://github.com/albot-dev/OpenMeshMind/issues/17>

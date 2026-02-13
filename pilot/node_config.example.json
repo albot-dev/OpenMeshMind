@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "node_id": "volunteer-node-001",
+  "mode": "reduced",
+  "cycle_interval_sec": 1800,
+  "max_cycles": 0,
+  "repo": "albot-dev/OpenMeshMind",
+  "token_env_var": "github_token",
+  "metrics_out": "pilot/pilot_metrics.json",
+  "state_out": "pilot/node_state.json",
+  "log_out": "pilot/node_runner.log",
+  "steps": [
+    {
+      "name": "smoke_check",
+      "command": [
+        "python3",
+        "scripts/smoke_check.py",
+        "--include-fairness",
+        "--json-out",
+        "smoke_summary.json"
+      ]
+    }
+  ]
+}

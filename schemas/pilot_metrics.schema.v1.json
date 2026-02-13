@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmeshmind.dev/schemas/pilot_metrics.schema.v1.json",
+  "title": "OpenMeshMind Pilot Metrics v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "timestamp_utc",
+    "node",
+    "health",
+    "quality",
+    "accessibility",
+    "decentralization",
+    "communication",
+    "status",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "minLength": 20
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "mode",
+        "python_version",
+        "platform"
+      ],
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 3
+        },
+        "python_version": {
+          "type": "string",
+          "minLength": 3
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_cycle_ok",
+        "cycle_duration_sec",
+        "step_count",
+        "uptime_ratio_24h"
+      ],
+      "properties": {
+        "last_cycle_ok": {
+          "type": "boolean"
+        },
+        "cycle_duration_sec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "step_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uptime_ratio_24h": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification_accuracy",
+        "classification_macro_f1",
+        "utility_fedavg_int8_accuracy",
+        "utility_fedavg_int8_macro_f1"
+      ],
+      "properties": {
+        "classification_accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "classification_macro_f1": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "utility_fedavg_int8_accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "utility_fedavg_int8_macro_f1": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "benchmark_total_runtime_sec",
+        "max_peak_rss_bytes",
+        "max_peak_heap_bytes"
+      ],
+      "properties": {
+        "benchmark_total_runtime_sec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_peak_rss_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_peak_heap_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "decentralization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_int8_jain_index",
+        "utility_int8_jain_gain"
+      ],
+      "properties": {
+        "baseline_int8_jain_index": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "utility_int8_jain_gain": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        }
+      }
+    },
+    "communication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_int8_reduction_percent",
+        "utility_int8_savings_percent"
+      ],
+      "properties": {
+        "baseline_int8_reduction_percent": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "utility_int8_savings_percent": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collected",
+        "open_milestones",
+        "open_issues"
+      ],
+      "properties": {
+        "collected": {
+          "type": "boolean"
+        },
+        "open_milestones": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "open_issues": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo",
+        "commit",
+        "decision_log",
+        "provenance_template"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 3
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 7
+        },
+        "decision_log": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provenance_template": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

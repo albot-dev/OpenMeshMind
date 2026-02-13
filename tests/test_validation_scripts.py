@@ -10,6 +10,7 @@ from scripts import check_baseline
 from scripts import check_benchmarks
 from scripts import check_classification
 from scripts import check_fairness
+from scripts import check_pilot_metrics
 from scripts import check_utility_fairness
 
 
@@ -300,6 +301,130 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_utility_fairness.main,
                 ["check_utility_fairness.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_pilot_metrics_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "pilot_ok.json",
+                {
+                    "schema_version": 1,
+                    "timestamp_utc": "2026-02-13T22:00:00+00:00",
+                    "node": {
+                        "node_id": "node-local-1",
+                        "mode": "reduced",
+                        "python_version": "3.12.0",
+                        "platform": "test-platform",
+                    },
+                    "health": {
+                        "last_cycle_ok": True,
+                        "cycle_duration_sec": 12.5,
+                        "step_count": 1,
+                        "uptime_ratio_24h": 0.98,
+                    },
+                    "quality": {
+                        "classification_accuracy": 0.92,
+                        "classification_macro_f1": 0.91,
+                        "utility_fedavg_int8_accuracy": 0.90,
+                        "utility_fedavg_int8_macro_f1": 0.89,
+                    },
+                    "accessibility": {
+                        "benchmark_total_runtime_sec": 8.2,
+                        "max_peak_rss_bytes": 1200000,
+                        "max_peak_heap_bytes": 900000,
+                    },
+                    "decentralization": {
+                        "baseline_int8_jain_index": 0.88,
+                        "utility_int8_jain_gain": 0.07,
+                    },
+                    "communication": {
+                        "baseline_int8_reduction_percent": 60.0,
+                        "utility_int8_savings_percent": 55.0,
+                    },
+                    "status": {
+                        "collected": True,
+                        "open_milestones": 0,
+                        "open_issues": 0,
+                    },
+                    "provenance": {
+                        "repo": "albot-dev/OpenMeshMind",
+                        "commit": "abcdef123456",
+                        "decision_log": "DECISION_LOG.md",
+                        "provenance_template": "PROVENANCE_TEMPLATE.md",
+                    },
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "pilot_bad.json",
+                {
+                    "schema_version": 1,
+                    "timestamp_utc": "2026-02-13T22:00:00+00:00",
+                    "node": {
+                        "node_id": "node-local-1",
+                        "mode": "reduced",
+                        "python_version": "3.12.0",
+                        "platform": "test-platform",
+                    },
+                    "health": {
+                        "last_cycle_ok": False,
+                        "cycle_duration_sec": 12.5,
+                        "step_count": 1,
+                        "uptime_ratio_24h": 1.20,
+                    },
+                    "quality": {
+                        "classification_accuracy": 0.92,
+                        "classification_macro_f1": 0.91,
+                        "utility_fedavg_int8_accuracy": 0.90,
+                        "utility_fedavg_int8_macro_f1": 0.89,
+                    },
+                    "accessibility": {
+                        "benchmark_total_runtime_sec": 8.2,
+                        "max_peak_rss_bytes": 1200000,
+                        "max_peak_heap_bytes": 900000,
+                    },
+                    "decentralization": {
+                        "baseline_int8_jain_index": 0.88,
+                        "utility_int8_jain_gain": 0.07,
+                    },
+                    "communication": {
+                        "baseline_int8_reduction_percent": 60.0,
+                        "utility_int8_savings_percent": 55.0,
+                    },
+                    "status": {
+                        "collected": False,
+                        "open_milestones": 0,
+                        "open_issues": 3,
+                    },
+                    "provenance": {
+                        "repo": "albot-dev/OpenMeshMind",
+                        "commit": "abcdef123456",
+                        "decision_log": "DECISION_LOG.md",
+                        "provenance_template": "PROVENANCE_TEMPLATE.md",
+                    },
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_pilot_metrics.main,
+                ["check_pilot_metrics.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_pilot_metrics.main,
+                [
+                    "check_pilot_metrics.py",
+                    str(invalid),
+                    "--require-status-collected",
+                    "--max-open-issues",
+                    "0",
+                ],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

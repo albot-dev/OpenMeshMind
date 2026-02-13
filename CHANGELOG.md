@@ -33,6 +33,17 @@ All notable changes to OpenMeshMind are documented here.
 - Added weekly reporting generator and bundle path: `scripts/generate_weekly_report.py`.
 - Added weekly report template: `reports/WEEKLY_STATUS_TEMPLATE.md`.
 - Added versioning and schema compatibility policy: `VERSIONING_POLICY.md`.
+- Added volunteer pilot node runner and config template:
+  - `scripts/pilot_node_runner.py`
+  - `pilot/node_config.example.json`
+  - `PILOT_NODE.md`
+- Added pilot metrics contract and validator:
+  - `schemas/pilot_metrics.schema.v1.json`
+  - `scripts/check_pilot_metrics.py`
+  - `scripts/build_pilot_metrics.py` updates for uptime/status collection fields
+  - `reports/PILOT_STATUS_TEMPLATE.md`
+- Added pilot incident/rollback/escalation playbook: `PILOT_OPERATIONS.md`.
+- Added incident response label taxonomy for pilot operations (`pilot:*` labels).
 
 ## 2026-02-12
 
