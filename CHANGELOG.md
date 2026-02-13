@@ -27,6 +27,9 @@ All notable changes to OpenMeshMind are documented here.
 - Added governance artifacts: `DECISION_LOG.md`, `PROVENANCE_TEMPLATE.md`, and PR template checklist.
 - Added low-end one-command smoke path: `scripts/smoke_check.py`.
 - Added low-end runtime/memory/troubleshooting notes: `reports/low_end_smoke_path.md`.
+- Added explicit OSS license: `LICENSE` (MIT).
+- Added release process guide: `RELEASE.md`.
+- Added tag-triggered release workflow: `.github/workflows/release.yml`.
 
 ## 2026-02-12
 

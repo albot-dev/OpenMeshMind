@@ -52,6 +52,7 @@ For expected runtime/memory envelopes and troubleshooting notes, see `reports/lo
 - For major experiment/policy changes, update:
   - `DECISION_LOG.md`
   - `PROVENANCE_TEMPLATE.md` (filled in context for the change)
+- For release work, follow `RELEASE.md`.
 
 ## Code style
 

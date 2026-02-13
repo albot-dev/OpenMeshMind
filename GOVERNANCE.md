@@ -21,6 +21,7 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
 
 - No release claims without reproducible scripts and metrics.
 - Regressions in baseline accessibility metrics must be justified and documented.
+- Tagged release process is documented in `RELEASE.md`.
 
 ## Baseline threshold governance
 

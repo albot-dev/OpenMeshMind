@@ -134,8 +134,12 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 
 Runtime/memory expectations and troubleshooting: `reports/low_end_smoke_path.md`.
 
+Release process and tagging workflow: `RELEASE.md`.
+
 ## Policy docs
 
+- `LICENSE`
+- `RELEASE.md`
 - `BASELINE_POLICY.md`
 - `GOVERNANCE.md`
 - `DECISION_LOG.md`
@@ -150,9 +154,14 @@ See `ROADMAP.md` for phased execution.
 ## Work tracking
 
 - Project board: <https://github.com/users/albot-dev/projects/1>
-- Active milestone: (planning next phase)
+- Active milestone (Phase 4): <https://github.com/albot-dev/OpenMeshMind/milestone/4>
 - Current issues:
-  - (none)
+  - <https://github.com/albot-dev/OpenMeshMind/issues/15>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/16>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/17>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/18>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/19>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/20>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Completed Phase 2 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/2>
 - Completed Phase 3 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/3>
