@@ -142,7 +142,6 @@ See `ROADMAP.md` for phased execution.
 - Project board: <https://github.com/users/albot-dev/projects/1>
 - Active milestone (Phase 3): <https://github.com/albot-dev/OpenMeshMind/milestone/3>
 - Current issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/12>
   - <https://github.com/albot-dev/OpenMeshMind/issues/13>
   - <https://github.com/albot-dev/OpenMeshMind/issues/14>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
@@ -158,3 +157,4 @@ See `ROADMAP.md` for phased execution.
   - <https://github.com/albot-dev/OpenMeshMind/issues/9>
   - <https://github.com/albot-dev/OpenMeshMind/issues/10>
   - <https://github.com/albot-dev/OpenMeshMind/issues/11>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/12>
