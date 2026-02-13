@@ -20,6 +20,7 @@ Contributions should improve at least one of:
 Run these before opening a pull request:
 
 ```bash
+python3 -m unittest discover -s tests -p "test_*.py"
 python3 experiments/fedavg_cpu_only.py --json-out baseline_metrics.json
 python3 scripts/check_baseline.py baseline_metrics.json
 ```

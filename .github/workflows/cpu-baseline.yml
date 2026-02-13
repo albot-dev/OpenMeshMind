@@ -18,6 +18,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Run unit tests
+        run: |
+          python3 -m unittest discover -s tests -p "test_*.py" -v
+
       - name: Run CPU-only baseline experiment
         run: |
           python3 experiments/fedavg_cpu_only.py --json-out baseline_metrics.json

@@ -30,6 +30,8 @@ class RunResult:
     zero_client_rounds: int = 0
     secure_overhead_bytes: int = 0
     secure_mask_pair_count: int = 0
+    fairness_metrics: dict[str, float] | None = None
+    fairness_clients: list[dict[str, float | int]] | None = None
 
 
 DEFAULT_N_FEATURES = 18
@@ -86,6 +88,32 @@ def dequantize_int8(qvec: list[int], scale: float) -> list[float]:
 def add_in_place(dst: list[float], src: list[float]) -> None:
     for idx, value in enumerate(src):
         dst[idx] += value
+
+
+def l2_norm(vec: list[float]) -> float:
+    return math.sqrt(sum(value * value for value in vec))
+
+
+def jain_fairness(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    denom = len(values) * sum(value * value for value in values)
+    if denom == 0.0:
+        return 0.0
+    return (sum(values) ** 2) / denom
+
+
+def pearson_correlation(xs: list[float], ys: list[float]) -> float:
+    if len(xs) != len(ys) or len(xs) < 2:
+        return 0.0
+    x_mean = statistics.mean(xs)
+    y_mean = statistics.mean(ys)
+    cov = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys))
+    x_var = sum((x - x_mean) ** 2 for x in xs)
+    y_var = sum((y - y_mean) ** 2 for y in ys)
+    if x_var == 0.0 or y_var == 0.0:
+        return 0.0
+    return cov / math.sqrt(x_var * y_var)
 
 
 def secure_mask_updates(
@@ -239,14 +267,29 @@ def run_fedavg(
     quantized: bool,
     dropout_rate: float = 0.0,
     secure_aggregation: bool = False,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
 ) -> RunResult:
+    if client_capacities is not None and len(client_capacities) != len(clients):
+        raise ValueError("client_capacities length must match number of clients.")
+    if capacity_jitter < 0.0 or capacity_jitter >= 1.0:
+        raise ValueError("capacity_jitter must be in [0.0, 1.0).")
+    if round_deadline <= 0.0:
+        raise ValueError("round_deadline must be > 0.")
+
     server_w = [0.0] * n_features
     server_b = 0.0
     total_bytes = 0
     selected_clients = 0
+    contributed_clients = 0
     zero_client_rounds = 0
     secure_overhead_bytes = 0
     secure_mask_pair_count = 0
+    per_client_selected_rounds = [0 for _ in clients]
+    per_client_contributed_rounds = [0 for _ in clients]
+    per_client_uplink_bytes = [0 for _ in clients]
+    per_client_update_l2_sum = [0.0 for _ in clients]
 
     t0 = time.perf_counter()
     for _ in range(rounds):
@@ -257,15 +300,35 @@ def run_fedavg(
                 idx for idx in range(len(clients)) if random.random() >= dropout_rate
             ]
         selected_clients += len(active_client_indices)
+        for idx in active_client_indices:
+            per_client_selected_rounds[idx] += 1
 
         if not active_client_indices:
             zero_client_rounds += 1
             continue
 
-        active_examples = sum(len(clients[idx]) for idx in active_client_indices)
+        contributing_client_indices = []
+        if client_capacities is None:
+            contributing_client_indices = active_client_indices
+        else:
+            for idx in active_client_indices:
+                base_capacity = max(client_capacities[idx], 1e-6)
+                jitter = 1.0 + random.uniform(-capacity_jitter, capacity_jitter)
+                effective_capacity = max(0.05, base_capacity * jitter)
+                normalized_compute = (local_steps / DEFAULT_LOCAL_STEPS) / effective_capacity
+                network_factor = (0.45 if quantized else 1.0) / effective_capacity
+                if normalized_compute + network_factor <= round_deadline:
+                    contributing_client_indices.append(idx)
+
+        if not contributing_client_indices:
+            zero_client_rounds += 1
+            continue
+
+        contributed_clients += len(contributing_client_indices)
+        active_examples = sum(len(clients[idx]) for idx in contributing_client_indices)
         weighted_updates: list[list[float]] = []
 
-        for idx in active_client_indices:
+        for idx in contributing_client_indices:
             local_data = clients[idx]
             weight = len(local_data) / active_examples
             local_w = list(server_w)
@@ -278,10 +341,14 @@ def run_fedavg(
             if quantized:
                 qvec, scale = quantize_int8(delta_vec)
                 restored = dequantize_int8(qvec, scale)
-                total_bytes += len(qvec) + 4  # int8 vector + float32 scale
+                sent_bytes = len(qvec) + 4  # int8 vector + float32 scale
             else:
                 restored = delta_vec
-                total_bytes += len(delta_vec) * 4  # float32 equivalent
+                sent_bytes = len(delta_vec) * 4  # float32 equivalent
+            total_bytes += sent_bytes
+            per_client_uplink_bytes[idx] += sent_bytes
+            per_client_contributed_rounds[idx] += 1
+            per_client_update_l2_sum[idx] += l2_norm(restored)
 
             weighted_updates.append([weight * val for val in restored])
 
@@ -302,6 +369,74 @@ def run_fedavg(
     dt = time.perf_counter() - t0
     total_client_slots = rounds * len(clients)
     participation_rate = selected_clients / total_client_slots if total_client_slots else None
+    fairness_metrics: dict[str, float] | None = None
+    fairness_clients: list[dict[str, float | int]] | None = None
+
+    if client_capacities is not None:
+        total_uplink = sum(per_client_uplink_bytes)
+        fairness_clients = []
+        participation_rates: list[float] = []
+        contribution_rates: list[float] = []
+        completion_rates: list[float] = []
+        for idx, capacity in enumerate(client_capacities):
+            selected_rounds = per_client_selected_rounds[idx]
+            contributed_rounds = per_client_contributed_rounds[idx]
+            client_participation = selected_rounds / rounds if rounds else 0.0
+            client_contribution = contributed_rounds / rounds if rounds else 0.0
+            completion_rate = (
+                contributed_rounds / selected_rounds if selected_rounds else 0.0
+            )
+            participation_rates.append(client_participation)
+            contribution_rates.append(client_contribution)
+            completion_rates.append(completion_rate)
+            fairness_clients.append(
+                {
+                    "client_index": idx,
+                    "capacity": capacity,
+                    "selected_rounds": selected_rounds,
+                    "contributed_rounds": contributed_rounds,
+                    "participation_rate": client_participation,
+                    "contribution_rate": client_contribution,
+                    "completion_rate": completion_rate,
+                    "uplink_bytes": per_client_uplink_bytes[idx],
+                    "uplink_share": (
+                        per_client_uplink_bytes[idx] / total_uplink if total_uplink else 0.0
+                    ),
+                    "update_l2_mean": (
+                        per_client_update_l2_sum[idx] / contributed_rounds
+                        if contributed_rounds
+                        else 0.0
+                    ),
+                }
+            )
+
+        slowest_index = min(
+            range(len(client_capacities)),
+            key=lambda idx: client_capacities[idx],
+        )
+        fastest_index = max(
+            range(len(client_capacities)),
+            key=lambda idx: client_capacities[idx],
+        )
+        slowest_rate = contribution_rates[slowest_index]
+        fastest_rate = contribution_rates[fastest_index]
+        fairness_metrics = {
+            "participation_rate_gap": max(participation_rates) - min(participation_rates),
+            "contribution_rate_gap": max(contribution_rates) - min(contribution_rates),
+            "completion_rate_gap": max(completion_rates) - min(completion_rates),
+            "contribution_jain_index": jain_fairness(contribution_rates),
+            "capacity_contribution_correlation": pearson_correlation(
+                client_capacities,
+                contribution_rates,
+            ),
+            "slowest_fastest_contribution_ratio": (
+                slowest_rate / fastest_rate if fastest_rate > 0.0 else 0.0
+            ),
+            "contributed_clients_per_round_mean": (
+                contributed_clients / rounds if rounds else 0.0
+            ),
+        }
+
     return RunResult(
         accuracy=accuracy(server_w, server_b, test_data),
         runtime_sec=dt,
@@ -310,6 +445,8 @@ def run_fedavg(
         zero_client_rounds=zero_client_rounds,
         secure_overhead_bytes=secure_overhead_bytes,
         secure_mask_pair_count=secure_mask_pair_count,
+        fairness_metrics=fairness_metrics,
+        fairness_clients=fairness_clients,
     )
 
 
@@ -326,6 +463,9 @@ def run_once(
     dropout_rate: float = 0.0,
     non_iid_severity: float = DEFAULT_NON_IID_SEVERITY,
     secure_aggregation: bool = False,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
     n_features: int = DEFAULT_N_FEATURES,
     n_clients: int = DEFAULT_N_CLIENTS,
     rounds: int = DEFAULT_ROUNDS,
@@ -359,6 +499,9 @@ def run_once(
             quantized=False,
             dropout_rate=dropout_rate,
             secure_aggregation=secure_aggregation,
+            client_capacities=client_capacities,
+            round_deadline=round_deadline,
+            capacity_jitter=capacity_jitter,
         ),
         "fedavg_int8": run_fedavg(
             clients=clients,
@@ -371,6 +514,9 @@ def run_once(
             quantized=True,
             dropout_rate=dropout_rate,
             secure_aggregation=secure_aggregation,
+            client_capacities=client_capacities,
+            round_deadline=round_deadline,
+            capacity_jitter=capacity_jitter,
         ),
     }
 
@@ -379,7 +525,7 @@ def aggregate(
     results: list[dict[str, RunResult]],
     config: dict[str, object],
 ) -> dict[str, object]:
-    methods: dict[str, dict[str, float | int]] = {}
+    methods: dict[str, dict[str, object]] = {}
     names = ["centralized", "fedavg_fp32", "fedavg_int8"]
 
     for name in names:
@@ -413,6 +559,49 @@ def aggregate(
             methods[name]["secure_mask_pairs_mean"] = statistics.mean(
                 [r[name].secure_mask_pair_count for r in results]
             )
+        fairness_runs = [r[name].fairness_metrics for r in results if r[name].fairness_metrics]
+        if fairness_runs:
+            fairness_summary: dict[str, float] = {}
+            for metric in fairness_runs[0]:
+                values = [run[metric] for run in fairness_runs]
+                fairness_summary[f"{metric}_mean"] = statistics.mean(values)
+                fairness_summary[f"{metric}_std"] = statistics.pstdev(values)
+            methods[name]["fairness"] = fairness_summary
+
+        fairness_clients_runs = [r[name].fairness_clients for r in results if r[name].fairness_clients]
+        if fairness_clients_runs:
+            n_clients = len(fairness_clients_runs[0])
+            clients_aggregate: list[dict[str, float | int]] = []
+            for idx in range(n_clients):
+                per_seed = [run[idx] for run in fairness_clients_runs]
+                clients_aggregate.append(
+                    {
+                        "client_index": idx,
+                        "capacity": per_seed[0]["capacity"],
+                        "selected_rounds_mean": statistics.mean(
+                            [row["selected_rounds"] for row in per_seed]
+                        ),
+                        "contributed_rounds_mean": statistics.mean(
+                            [row["contributed_rounds"] for row in per_seed]
+                        ),
+                        "participation_rate_mean": statistics.mean(
+                            [row["participation_rate"] for row in per_seed]
+                        ),
+                        "contribution_rate_mean": statistics.mean(
+                            [row["contribution_rate"] for row in per_seed]
+                        ),
+                        "completion_rate_mean": statistics.mean(
+                            [row["completion_rate"] for row in per_seed]
+                        ),
+                        "uplink_share_mean": statistics.mean(
+                            [row["uplink_share"] for row in per_seed]
+                        ),
+                        "update_l2_mean": statistics.mean(
+                            [row["update_l2_mean"] for row in per_seed]
+                        ),
+                    }
+                )
+            methods[name]["fairness_clients"] = clients_aggregate
 
     fp = methods["fedavg_fp32"]["uplink_mean_bytes"]
     q8 = methods["fedavg_int8"]["uplink_mean_bytes"]
@@ -455,6 +644,9 @@ def run_experiment(
     dropout_rate: float,
     non_iid_severity: float,
     secure_aggregation: bool,
+    client_capacities: list[float] | None = None,
+    round_deadline: float = 4.2,
+    capacity_jitter: float = 0.1,
 ) -> dict[str, object]:
     all_results = [
         run_once(
@@ -462,6 +654,9 @@ def run_experiment(
             dropout_rate=dropout_rate,
             non_iid_severity=non_iid_severity,
             secure_aggregation=secure_aggregation,
+            client_capacities=client_capacities,
+            round_deadline=round_deadline,
+            capacity_jitter=capacity_jitter,
         )
         for seed in seeds
     ]
@@ -477,6 +672,10 @@ def run_experiment(
         "batch_size": DEFAULT_BATCH_SIZE,
         "learning_rate": DEFAULT_LR,
     }
+    if client_capacities is not None:
+        report_config["client_capacities"] = client_capacities
+        report_config["round_deadline"] = round_deadline
+        report_config["capacity_jitter"] = capacity_jitter
     report = aggregate(all_results, config=report_config)
 
     if dropout_rate > 0.0:
@@ -486,6 +685,9 @@ def run_experiment(
                 dropout_rate=0.0,
                 non_iid_severity=non_iid_severity,
                 secure_aggregation=secure_aggregation,
+                client_capacities=client_capacities,
+                round_deadline=round_deadline,
+                capacity_jitter=capacity_jitter,
             )
             for seed in seeds
         ]
@@ -525,6 +727,7 @@ def summarize_sweep(sweep_report: dict[str, object]) -> None:
             f"{comm_saving:<16}"
         )
 
+
 def summarize(report: dict[str, object]) -> None:
     methods = report["methods"]
     config = report["config"]
@@ -540,6 +743,13 @@ def summarize(report: dict[str, object]) -> None:
         f" rounds={config['rounds']},"
         f" local_steps={config['local_steps']}"
     )
+    if "client_capacities" in config:
+        print(
+            "Capacity simulation:"
+            f" deadline={config['round_deadline']:.2f},"
+            f" jitter={config['capacity_jitter']:.2f},"
+            f" capacities={config['client_capacities']}"
+        )
     print(f"{'Method':<16} {'Acc':<16} {'Runtime':<16} {'Uplink/client net'}")
     print("-" * 72)
 
@@ -568,6 +778,14 @@ def summarize(report: dict[str, object]) -> None:
                 " " * 16
                 + f"secure-overhead={fmt_bytes(row['secure_overhead_mean_bytes'])}, "
                 + f"mask-pairs={row['secure_mask_pairs_mean']:.2f}"
+            )
+        if "fairness" in row:
+            fairness = row["fairness"]
+            print(
+                " " * 16
+                + f"fairness_gap={fairness['contribution_rate_gap_mean']:.2%}, "
+                + f"jain={fairness['contribution_jain_index_mean']:.3f}, "
+                + f"cap-corr={fairness['capacity_contribution_correlation_mean']:.3f}"
             )
 
     savings = report["communication_reduction_percent"]
@@ -625,6 +843,37 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--simulate-client-capacity",
+        action="store_true",
+        help=(
+            "Enable heterogeneous client capacity simulation and fairness metrics "
+            "using the default capacity profile."
+        ),
+    )
+    parser.add_argument(
+        "--client-capacities",
+        default="",
+        help=(
+            "Optional comma-separated client capacities (positive floats). "
+            f"Expected length: {DEFAULT_N_CLIENTS}."
+        ),
+    )
+    parser.add_argument(
+        "--round-deadline",
+        type=float,
+        default=4.2,
+        help=(
+            "Normalized deadline used in capacity simulation. "
+            "Lower values increase exclusion of slower clients."
+        ),
+    )
+    parser.add_argument(
+        "--capacity-jitter",
+        type=float,
+        default=0.1,
+        help="Relative per-round capacity jitter in [0.0, 1.0).",
+    )
+    parser.add_argument(
         "--json-out",
         default="",
         help="Optional path to write machine-readable JSON metrics.",
@@ -640,6 +889,24 @@ def main() -> None:
         parser.error("--dropout-rate must be in [0.0, 1.0).")
     if args.non_iid_severity < 0.0:
         parser.error("--non-iid-severity must be >= 0.0.")
+    if args.round_deadline <= 0.0:
+        parser.error("--round-deadline must be > 0.0.")
+    if not (0.0 <= args.capacity_jitter < 1.0):
+        parser.error("--capacity-jitter must be in [0.0, 1.0).")
+
+    client_capacities: list[float] | None = None
+    if args.client_capacities.strip():
+        client_capacities = [float(s.strip()) for s in args.client_capacities.split(",") if s.strip()]
+    elif args.simulate_client_capacity:
+        client_capacities = [1.0, 0.95, 0.85, 0.75, 0.6, 0.5, 0.4, 0.35]
+
+    if client_capacities is not None:
+        if len(client_capacities) != DEFAULT_N_CLIENTS:
+            parser.error(
+                f"--client-capacities must include exactly {DEFAULT_N_CLIENTS} values."
+            )
+        if any(value <= 0.0 for value in client_capacities):
+            parser.error("--client-capacities values must be > 0.0.")
 
     seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
     if args.non_iid_sweep.strip():
@@ -652,6 +919,9 @@ def main() -> None:
                 dropout_rate=args.dropout_rate,
                 non_iid_severity=severity,
                 secure_aggregation=args.secure_aggregation,
+                client_capacities=client_capacities,
+                round_deadline=args.round_deadline,
+                capacity_jitter=args.capacity_jitter,
             )
             for severity in severities
         ]
@@ -676,6 +946,9 @@ def main() -> None:
         dropout_rate=args.dropout_rate,
         non_iid_severity=args.non_iid_severity,
         secure_aggregation=args.secure_aggregation,
+        client_capacities=client_capacities,
+        round_deadline=args.round_deadline,
+        capacity_jitter=args.capacity_jitter,
     )
 
     if not args.quiet:

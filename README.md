@@ -60,6 +60,14 @@ Run with mock secure aggregation (masked update aggregation + overhead metrics):
 python3 experiments/fedavg_cpu_only.py --secure-aggregation --json-out secure_metrics.json
 ```
 
+Run heterogeneous capacity fairness simulation:
+
+```bash
+python3 experiments/fedavg_cpu_only.py --simulate-client-capacity --json-out fairness_metrics.json
+```
+
+A sample fairness summary is available in `reports/fairness_capacity_simulation.md`.
+
 Run the local retrieval baseline (dependency-light TF-IDF):
 
 ```bash
@@ -82,6 +90,7 @@ python3 scripts/benchmark_suite.py --mode full --json-out benchmark_metrics.json
 Run reduced benchmark mode (CI-friendly):
 
 ```bash
+python3 -m unittest discover -s tests -p "test_*.py"
 python3 scripts/benchmark_suite.py --mode reduced --json-out benchmark_metrics.json
 python3 scripts/check_benchmarks.py benchmark_metrics.json --expected-mode reduced
 ```
@@ -102,7 +111,6 @@ See `ROADMAP.md` for phased execution.
 - Project board: <https://github.com/users/albot-dev/projects/1>
 - Active milestone (Phase 2): <https://github.com/albot-dev/OpenMeshMind/milestone/2>
 - Current issues:
-  - <https://github.com/albot-dev/OpenMeshMind/issues/7>
   - <https://github.com/albot-dev/OpenMeshMind/issues/8>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Completed issues:
@@ -112,3 +120,4 @@ See `ROADMAP.md` for phased execution.
   - <https://github.com/albot-dev/OpenMeshMind/issues/4>
   - <https://github.com/albot-dev/OpenMeshMind/issues/5>
   - <https://github.com/albot-dev/OpenMeshMind/issues/6>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/7>

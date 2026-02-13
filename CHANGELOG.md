@@ -2,6 +2,17 @@
 
 All notable changes to OpenMeshMind are documented here.
 
+## 2026-02-13
+
+### Added
+
+- Heterogeneous client-capacity fairness simulation in the CPU FedAvg experiment.
+- Fairness metrics in JSON output, including participation/contribution disparity indicators.
+- Per-client fairness breakdowns for contribution rates and completion rates.
+- Fairness run snapshot report: `reports/fairness_capacity_simulation.md`.
+- Unit test suite covering core experiment math, retrieval baseline behavior, and validator scripts.
+- Minimal project metadata in `pyproject.toml`.
+
 ## 2026-02-12
 
 ### Added

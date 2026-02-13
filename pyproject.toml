@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openmeshmind-ai4all"
+version = "0.1.0"
+description = "CPU-first federated learning and local retrieval baselines."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.setuptools]
+py-modules = []
