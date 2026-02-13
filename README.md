@@ -69,6 +69,14 @@ python3 scripts/check_fairness.py fairness_metrics.json
 
 A sample fairness summary is available in `reports/fairness_capacity_simulation.md`.
 
+Run the local classification utility baseline (CPU-only, dependency-light):
+
+```bash
+python3 experiments/local_classification_baseline.py --json-out classification_metrics.json
+```
+
+Sample classification summary: `reports/local_classification_baseline.md`.
+
 Run the local retrieval baseline (dependency-light TF-IDF):
 
 ```bash
@@ -110,9 +118,14 @@ See `ROADMAP.md` for phased execution.
 ## Work tracking
 
 - Project board: <https://github.com/users/albot-dev/projects/1>
-- Active milestone (Phase 2): <https://github.com/albot-dev/OpenMeshMind/milestone/2>
+- Active milestone (Phase 3): <https://github.com/albot-dev/OpenMeshMind/milestone/3>
 - Current issues:
-  - (none)
+  - <https://github.com/albot-dev/OpenMeshMind/issues/9>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/10>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/11>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/12>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/13>
+  - <https://github.com/albot-dev/OpenMeshMind/issues/14>
 - Completed Phase 1 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/1>
 - Completed issues:
   - <https://github.com/albot-dev/OpenMeshMind/issues/1>

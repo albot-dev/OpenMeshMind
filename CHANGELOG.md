@@ -14,6 +14,8 @@ All notable changes to OpenMeshMind are documented here.
 - Minimal project metadata in `pyproject.toml`.
 - Fairness validator script: `scripts/check_fairness.py`.
 - CI fairness scenario + validation gate with uploaded fairness artifact.
+- CPU-only local classification utility baseline (`experiments/local_classification_baseline.py`).
+- Classification baseline snapshot report: `reports/local_classification_baseline.md`.
 
 ## 2026-02-12
 
