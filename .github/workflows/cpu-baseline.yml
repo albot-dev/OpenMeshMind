@@ -103,6 +103,25 @@ jobs:
           python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json \
             --expected-schema-version 1
 
+      - name: Build pilot cohort metrics report
+        run: |
+          python3 scripts/build_pilot_cohort_metrics.py \
+            --metrics pilot/pilot_metrics.json \
+            --json-out pilot/pilot_cohort_metrics.json
+
+      - name: Validate pilot cohort metrics report
+        run: |
+          python3 scripts/check_pilot_cohort.py pilot/pilot_cohort_metrics.json \
+            --expected-schema-version 1 \
+            --min-node-count 1
+
+      - name: Generate pilot status report
+        run: |
+          python3 scripts/generate_pilot_status_report.py \
+            --pilot-metrics pilot/pilot_metrics.json \
+            --cohort-metrics pilot/pilot_cohort_metrics.json \
+            --out reports/pilot_status.md
+
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4
         with:
@@ -138,3 +157,15 @@ jobs:
         with:
           name: pilot-metrics
           path: pilot/pilot_metrics.json
+
+      - name: Upload pilot cohort metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-cohort-metrics
+          path: pilot/pilot_cohort_metrics.json
+
+      - name: Upload pilot status report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-status-report
+          path: reports/pilot_status.md

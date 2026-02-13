@@ -77,3 +77,4 @@ python3 scripts/pilot_node_runner.py --config pilot/node_config.json
 - Incident issue includes timeline, impact, root cause, and mitigation.
 - Follow-up issue(s) created for preventive actions.
 - Weekly status report includes incident summary and current risk status.
+- Governance review is recorded in the weekly cadence from `PILOT_GOVERNANCE.md`.

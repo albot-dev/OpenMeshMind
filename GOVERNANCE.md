@@ -42,7 +42,14 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
 
 - Volunteer node operations and minimum requirements are documented in `PILOT_NODE.md`.
 - Incident, rollback, severity handling, and escalation rules are documented in `PILOT_OPERATIONS.md`.
+- Weekly pilot governance cadence and ownership are documented in `PILOT_GOVERNANCE.md`.
+- Pilot decision intake template is documented in `PILOT_DECISION_INTAKE_TEMPLATE.md`.
 - Pilot metrics contract and validator are tracked in:
   - `schemas/pilot_metrics.schema.v1.json`
   - `scripts/check_pilot_metrics.py`
+  - `schemas/pilot_cohort.schema.v1.json`
+  - `scripts/check_pilot_cohort.py`
 - Public pilot reporting should use `reports/PILOT_STATUS_TEMPLATE.md`.
+- Accepted pilot decisions must be linked to:
+  - `DECISION_LOG.md`
+  - public GitHub issue references

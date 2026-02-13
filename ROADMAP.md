@@ -44,4 +44,12 @@
   - `PILOT_NODE.md`
   - `PILOT_OPERATIONS.md`
   - `schemas/pilot_metrics.schema.v1.json`
+  - `schemas/pilot_cohort.schema.v1.json`
   - `reports/PILOT_STATUS_TEMPLATE.md`
+
+## Phase 6: Public pilot execution
+
+- Onboard first volunteer node cohort and run recurring pilot cycles.
+- Aggregate cohort-level metrics (uptime/fairness/quality/communication).
+- Automate public pilot status reporting from machine-readable artifacts.
+- Enforce transparent pilot governance cadence and decision intake.

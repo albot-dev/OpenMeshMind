@@ -12,6 +12,8 @@ baseline_results.json
 smoke_summary.json
 reports/weekly_status.md
 reports/weekly_artifacts.tgz
+reports/pilot_status.md
+reports/pilot_artifacts.tgz
 pilot/node_config.json
 pilot/node_state.json
 pilot/node_runner.log

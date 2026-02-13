@@ -10,6 +10,7 @@ from scripts import check_baseline
 from scripts import check_benchmarks
 from scripts import check_classification
 from scripts import check_fairness
+from scripts import check_pilot_cohort
 from scripts import check_pilot_metrics
 from scripts import check_utility_fairness
 
@@ -424,6 +425,146 @@ class ValidationScriptTests(unittest.TestCase):
                     "--require-status-collected",
                     "--max-open-issues",
                     "0",
+                ],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_pilot_cohort_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "pilot_cohort_ok.json",
+                {
+                    "schema_version": 1,
+                    "timestamp_utc": "2026-02-13T22:00:00+00:00",
+                    "cohort": {
+                        "node_count": 3,
+                        "node_ids": ["node-a", "node-b", "node-c"],
+                        "sources": ["pilot/a.json", "pilot/b.json", "pilot/c.json"],
+                    },
+                    "nodes": [],
+                    "summary": {
+                        "health": {
+                            "uptime_ratio_24h_mean": 0.97,
+                            "uptime_ratio_24h_min": 0.93,
+                            "uptime_ratio_24h_max": 1.0,
+                            "last_cycle_ok_ratio": 1.0,
+                        },
+                        "quality": {
+                            "classification_accuracy_mean": 0.91,
+                            "classification_macro_f1_mean": 0.90,
+                            "utility_fedavg_int8_accuracy_mean": 0.89,
+                            "utility_fedavg_int8_macro_f1_mean": 0.88,
+                        },
+                        "accessibility": {
+                            "benchmark_total_runtime_sec_mean": 8.0,
+                            "max_peak_rss_bytes_max": 1500000,
+                            "max_peak_heap_bytes_max": 900000,
+                        },
+                        "decentralization": {
+                            "baseline_int8_jain_index_mean": 0.88,
+                            "utility_int8_jain_gain_mean": 0.07,
+                            "utility_int8_jain_gain_min": 0.05,
+                            "utility_int8_jain_gain_max": 0.08,
+                        },
+                        "communication": {
+                            "baseline_int8_reduction_percent_mean": 60.0,
+                            "utility_int8_savings_percent_mean": 55.0,
+                        },
+                        "status": {
+                            "open_milestones_max": 1,
+                            "open_issues_max": 3,
+                            "status_collected_ratio": 1.0,
+                        },
+                    },
+                    "provenance": {
+                        "repo": "albot-dev/OpenMeshMind",
+                        "commit": "abcdef123456",
+                        "source_count": 3,
+                    },
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "pilot_cohort_bad.json",
+                {
+                    "schema_version": 1,
+                    "timestamp_utc": "2026-02-13T22:00:00+00:00",
+                    "cohort": {
+                        "node_count": 1,
+                        "node_ids": ["node-a"],
+                        "sources": ["pilot/a.json"],
+                    },
+                    "nodes": [],
+                    "summary": {
+                        "health": {
+                            "uptime_ratio_24h_mean": 0.60,
+                            "uptime_ratio_24h_min": 0.60,
+                            "uptime_ratio_24h_max": 0.60,
+                            "last_cycle_ok_ratio": 0.0,
+                        },
+                        "quality": {
+                            "classification_accuracy_mean": 0.80,
+                            "classification_macro_f1_mean": 0.80,
+                            "utility_fedavg_int8_accuracy_mean": 0.79,
+                            "utility_fedavg_int8_macro_f1_mean": 0.78,
+                        },
+                        "accessibility": {
+                            "benchmark_total_runtime_sec_mean": 8.0,
+                            "max_peak_rss_bytes_max": 1500000,
+                            "max_peak_heap_bytes_max": 900000,
+                        },
+                        "decentralization": {
+                            "baseline_int8_jain_index_mean": 0.80,
+                            "utility_int8_jain_gain_mean": 0.01,
+                            "utility_int8_jain_gain_min": 0.01,
+                            "utility_int8_jain_gain_max": 0.01,
+                        },
+                        "communication": {
+                            "baseline_int8_reduction_percent_mean": 50.0,
+                            "utility_int8_savings_percent_mean": 45.0,
+                        },
+                        "status": {
+                            "open_milestones_max": 1,
+                            "open_issues_max": 8,
+                            "status_collected_ratio": 0.0,
+                        },
+                    },
+                    "provenance": {
+                        "repo": "albot-dev/OpenMeshMind",
+                        "commit": "abcdef123456",
+                        "source_count": 1,
+                    },
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_pilot_cohort.main,
+                [
+                    "check_pilot_cohort.py",
+                    str(valid),
+                    "--min-node-count",
+                    "3",
+                    "--min-status-collected-ratio",
+                    "1.0",
+                ],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_pilot_cohort.main,
+                [
+                    "check_pilot_cohort.py",
+                    str(invalid),
+                    "--min-node-count",
+                    "3",
+                    "--min-status-collected-ratio",
+                    "1.0",
+                    "--max-open-issues",
+                    "3",
                 ],
             )
             self.assertEqual(code_bad, 1)

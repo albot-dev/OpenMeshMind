@@ -44,6 +44,16 @@ All notable changes to OpenMeshMind are documented here.
   - `reports/PILOT_STATUS_TEMPLATE.md`
 - Added pilot incident/rollback/escalation playbook: `PILOT_OPERATIONS.md`.
 - Added incident response label taxonomy for pilot operations (`pilot:*` labels).
+- Added cohort-level pilot aggregation + validation:
+  - `scripts/build_pilot_cohort_metrics.py`
+  - `schemas/pilot_cohort.schema.v1.json`
+  - `scripts/check_pilot_cohort.py`
+- Added pilot status report automation:
+  - `scripts/generate_pilot_status_report.py`
+  - tokenized `reports/PILOT_STATUS_TEMPLATE.md`
+- Added pilot governance cadence and intake templates:
+  - `PILOT_GOVERNANCE.md`
+  - `PILOT_DECISION_INTAKE_TEMPLATE.md`
 
 ## 2026-02-12
 

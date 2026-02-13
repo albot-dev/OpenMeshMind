@@ -52,12 +52,17 @@ cp pilot/node_config.example.json pilot/node_config.json
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
+python3 scripts/build_pilot_cohort_metrics.py --metrics pilot/pilot_metrics.json --json-out pilot/pilot_cohort_metrics.json
+python3 scripts/check_pilot_cohort.py pilot/pilot_cohort_metrics.json --min-node-count 1
+python3 scripts/generate_pilot_status_report.py --out reports/pilot_status.md --bundle-out reports/pilot_artifacts.tgz
 ```
 
 Pilot runbook and escalation details:
 
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
+- `PILOT_GOVERNANCE.md`
+- `PILOT_DECISION_INTAKE_TEMPLATE.md`
 - `reports/PILOT_STATUS_TEMPLATE.md`
 
 ## Weekly reporting

@@ -151,13 +151,23 @@ cp pilot/node_config.example.json pilot/node_config.json
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
+python3 scripts/build_pilot_cohort_metrics.py --metrics pilot/pilot_metrics.json --json-out pilot/pilot_cohort_metrics.json
+python3 scripts/check_pilot_cohort.py pilot/pilot_cohort_metrics.json --min-node-count 1
+python3 scripts/generate_pilot_status_report.py \
+  --pilot-metrics pilot/pilot_metrics.json \
+  --cohort-metrics pilot/pilot_cohort_metrics.json \
+  --out reports/pilot_status.md \
+  --bundle-out reports/pilot_artifacts.tgz
 ```
 
 Pilot operations references:
 
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
+- `PILOT_GOVERNANCE.md`
+- `PILOT_DECISION_INTAKE_TEMPLATE.md`
 - `schemas/pilot_metrics.schema.v1.json`
+- `schemas/pilot_cohort.schema.v1.json`
 - `reports/PILOT_STATUS_TEMPLATE.md`
 
 ## Policy docs
@@ -173,6 +183,8 @@ Pilot operations references:
 - `PROJECTS.md`
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
+- `PILOT_GOVERNANCE.md`
+- `PILOT_DECISION_INTAKE_TEMPLATE.md`
 
 ## Next milestones
 

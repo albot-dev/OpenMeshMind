@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmeshmind.dev/schemas/pilot_cohort.schema.v1.json",
+  "title": "OpenMeshMind Pilot Cohort Metrics v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "timestamp_utc",
+    "cohort",
+    "nodes",
+    "summary",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "minLength": 20
+    },
+    "cohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_count",
+        "node_ids",
+        "sources"
+      ],
+      "properties": {
+        "node_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "node_ids": {
+          "type": "array"
+        },
+        "sources": {
+          "type": "array"
+        }
+      }
+    },
+    "nodes": {
+      "type": "array"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "health",
+        "quality",
+        "accessibility",
+        "decentralization",
+        "communication",
+        "status"
+      ],
+      "properties": {
+        "health": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "uptime_ratio_24h_mean",
+            "uptime_ratio_24h_min",
+            "uptime_ratio_24h_max",
+            "last_cycle_ok_ratio"
+          ],
+          "properties": {
+            "uptime_ratio_24h_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "uptime_ratio_24h_min": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "uptime_ratio_24h_max": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "last_cycle_ok_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "classification_accuracy_mean",
+            "classification_macro_f1_mean",
+            "utility_fedavg_int8_accuracy_mean",
+            "utility_fedavg_int8_macro_f1_mean"
+          ],
+          "properties": {
+            "classification_accuracy_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "classification_macro_f1_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "utility_fedavg_int8_accuracy_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "utility_fedavg_int8_macro_f1_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "benchmark_total_runtime_sec_mean",
+            "max_peak_rss_bytes_max",
+            "max_peak_heap_bytes_max"
+          ],
+          "properties": {
+            "benchmark_total_runtime_sec_mean": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max_peak_rss_bytes_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_peak_heap_bytes_max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "decentralization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline_int8_jain_index_mean",
+            "utility_int8_jain_gain_mean",
+            "utility_int8_jain_gain_min",
+            "utility_int8_jain_gain_max"
+          ],
+          "properties": {
+            "baseline_int8_jain_index_mean": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "utility_int8_jain_gain_mean": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "utility_int8_jain_gain_min": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "utility_int8_jain_gain_max": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        },
+        "communication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline_int8_reduction_percent_mean",
+            "utility_int8_savings_percent_mean"
+          ],
+          "properties": {
+            "baseline_int8_reduction_percent_mean": {
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "utility_int8_savings_percent_mean": {
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            }
+          }
+        },
+        "status": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "open_milestones_max",
+            "open_issues_max",
+            "status_collected_ratio"
+          ],
+          "properties": {
+            "open_milestones_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "open_issues_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "status_collected_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo",
+        "commit",
+        "source_count"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 7
+        },
+        "source_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
