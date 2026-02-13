@@ -148,6 +148,7 @@ Run volunteer pilot node cycle and health checks:
 
 ```bash
 cp pilot/node_config.example.json pilot/node_config.json
+bash scripts/volunteer_node_setup.sh --node-id volunteer-node-001
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
@@ -183,6 +184,7 @@ Pilot operations references:
 - `pilot/PILOT_14_DAY_RUNBOOK.md`
 - `pilot/cohort_manifest.schema.v1.json`
 - `pilot/cohort_manifest.example.json`
+- `scripts/volunteer_node_setup.sh`
 - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
 - `schemas/pilot_metrics.schema.v1.json`
 - `schemas/pilot_cohort.schema.v1.json`

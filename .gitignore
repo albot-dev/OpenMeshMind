@@ -20,4 +20,6 @@ pilot/cohort_onboarding_summary.json
 pilot/node_config.json
 pilot/node_state.json
 pilot/node_runner.log
+pilot/nodes/
+pilot/submissions/
 .env

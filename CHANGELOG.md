@@ -66,6 +66,8 @@ All notable changes to OpenMeshMind are documented here.
   - `pilot/incident_log.json`
   - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
   - `scripts/generate_pilot_14_day_report.py`
+- Added one-command volunteer bootstrap script:
+  - `scripts/volunteer_node_setup.sh`
 
 ## 2026-02-12
 

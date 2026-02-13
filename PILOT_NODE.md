@@ -27,6 +27,8 @@ cp pilot/node_config.example.json pilot/node_config.json
 3. Run one warm-up cycle:
 
 ```bash
+bash scripts/volunteer_node_setup.sh --node-id volunteer-node-001
+# or manual:
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
 ```
 
