@@ -24,6 +24,9 @@ All notable changes to OpenMeshMind are documented here.
 - Utility fairness stress sweep support in federated classification experiment.
 - Utility fairness validator script: `scripts/check_utility_fairness.py`.
 - Utility fairness snapshot report: `reports/fedavg_classification_fairness.md`.
+- Added governance artifacts: `DECISION_LOG.md`, `PROVENANCE_TEMPLATE.md`, and PR template checklist.
+- Added low-end one-command smoke path: `scripts/smoke_check.py`.
+- Added low-end runtime/memory/troubleshooting notes: `reports/low_end_smoke_path.md`.
 
 ## 2026-02-12
 

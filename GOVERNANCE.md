@@ -14,6 +14,8 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
 - Major changes should be proposed as GitHub issues first.
 - Technical decisions should include tradeoffs and measurable acceptance criteria.
 - When in doubt, choose the option that improves accessibility and auditability.
+- Record major choices in `DECISION_LOG.md`.
+- Attach experiment provenance using `PROVENANCE_TEMPLATE.md` for major baseline changes.
 
 ## Release policy
 

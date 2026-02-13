@@ -32,11 +32,26 @@ python3 experiments/fedavg_classification_utility.py --simulate-client-capacity 
 python3 scripts/check_utility_fairness.py utility_fairness_metrics.json
 ```
 
+## Low-end quickstart
+
+Run the one-command smoke path:
+
+```bash
+python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
+```
+
+If a step fails, rerun the exact command shown in smoke output.
+For expected runtime/memory envelopes and troubleshooting notes, see `reports/low_end_smoke_path.md`.
+
 ## Pull request expectations
 
 - State the problem and expected user impact.
 - Include before/after metrics for behavior changes.
 - Keep changes focused; split large efforts into incremental PRs.
+- Use `.github/pull_request_template.md` checklist before requesting review.
+- For major experiment/policy changes, update:
+  - `DECISION_LOG.md`
+  - `PROVENANCE_TEMPLATE.md` (filled in context for the change)
 
 ## Code style
 

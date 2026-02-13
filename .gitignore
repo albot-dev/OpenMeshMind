@@ -9,4 +9,5 @@ test_write.tmp
 baseline_metrics.json
 baseline_results.json
 *_metrics.json
+smoke_summary.json
 .env

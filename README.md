@@ -126,10 +126,20 @@ python3 scripts/benchmark_suite.py --mode reduced --json-out benchmark_metrics.j
 python3 scripts/check_benchmarks.py benchmark_metrics.json --expected-mode reduced
 ```
 
+Low-end contributor smoke path (one command):
+
+```bash
+python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
+```
+
+Runtime/memory expectations and troubleshooting: `reports/low_end_smoke_path.md`.
+
 ## Policy docs
 
 - `BASELINE_POLICY.md`
 - `GOVERNANCE.md`
+- `DECISION_LOG.md`
+- `PROVENANCE_TEMPLATE.md`
 - `CHANGELOG.md`
 - `PROJECTS.md`
 
