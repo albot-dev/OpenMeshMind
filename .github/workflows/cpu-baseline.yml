@@ -34,6 +34,20 @@ jobs:
             --min-comm-reduction 50 \
             --expected-schema-version 2
 
+      - name: Run capacity fairness scenario
+        run: |
+          python3 experiments/fedavg_cpu_only.py \
+            --simulate-client-capacity \
+            --quiet \
+            --json-out fairness_metrics.json
+
+      - name: Validate fairness metrics
+        run: |
+          python3 scripts/check_fairness.py fairness_metrics.json \
+            --expected-schema-version 2 \
+            --min-int8-jain-improvement 0.05 \
+            --min-int8-contributed-clients-gain 0.5
+
       - name: Run reduced benchmark suite
         run: |
           python3 scripts/benchmark_suite.py --mode reduced --quiet --json-out benchmark_metrics.json
@@ -55,3 +69,9 @@ jobs:
         with:
           name: benchmark-metrics
           path: benchmark_metrics.json
+
+      - name: Upload fairness metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fairness-metrics
+          path: fairness_metrics.json

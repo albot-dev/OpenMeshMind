@@ -64,6 +64,7 @@ Run heterogeneous capacity fairness simulation:
 
 ```bash
 python3 experiments/fedavg_cpu_only.py --simulate-client-capacity --json-out fairness_metrics.json
+python3 scripts/check_fairness.py fairness_metrics.json
 ```
 
 A sample fairness summary is available in `reports/fairness_capacity_simulation.md`.

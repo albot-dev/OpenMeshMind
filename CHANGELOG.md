@@ -12,6 +12,8 @@ All notable changes to OpenMeshMind are documented here.
 - Fairness run snapshot report: `reports/fairness_capacity_simulation.md`.
 - Unit test suite covering core experiment math, retrieval baseline behavior, and validator scripts.
 - Minimal project metadata in `pyproject.toml`.
+- Fairness validator script: `scripts/check_fairness.py`.
+- CI fairness scenario + validation gate with uploaded fairness artifact.
 
 ## 2026-02-12
 
