@@ -14,6 +14,9 @@ reports/weekly_status.md
 reports/weekly_artifacts.tgz
 reports/pilot_status.md
 reports/pilot_artifacts.tgz
+reports/pilot_14_day_report.md
+reports/pilot_14_day_artifacts.tgz
+pilot/cohort_onboarding_summary.json
 pilot/node_config.json
 pilot/node_state.json
 pilot/node_runner.log

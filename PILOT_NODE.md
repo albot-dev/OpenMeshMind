@@ -62,9 +62,11 @@ Pilot metrics schema validation:
 
 ```bash
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
+python3 scripts/check_cohort_manifest.py pilot/cohort_manifest.json --min-nodes 5 --min-passed 5 --require-metrics-files --summary-json-out pilot/cohort_onboarding_summary.json
 python3 scripts/build_pilot_cohort_metrics.py --metrics pilot/pilot_metrics.json --json-out pilot/pilot_cohort_metrics.json
 python3 scripts/check_pilot_cohort.py pilot/pilot_cohort_metrics.json --min-node-count 1
 python3 scripts/generate_pilot_status_report.py --out reports/pilot_status.md --bundle-out reports/pilot_artifacts.tgz
+python3 scripts/generate_pilot_14_day_report.py --manifest pilot/cohort_manifest.json --onboarding-summary pilot/cohort_onboarding_summary.json --daily-cohort-glob 'pilot/runs/day*/pilot_cohort_metrics.json' --incident-log pilot/incident_log.json --out reports/pilot_14_day_report.md --bundle-out reports/pilot_14_day_artifacts.tgz
 ```
 
 Pilot launch readiness gate (no open pilot prep work):
@@ -103,6 +105,10 @@ python3 scripts/check_pilot_metrics.py \
 - `PILOT_OPERATIONS.md`
 - `PILOT_GOVERNANCE.md`
 - `PILOT_DECISION_INTAKE_TEMPLATE.md`
+- `pilot/COHORT_ONBOARDING_CHECKLIST.md`
+- `pilot/PILOT_14_DAY_RUNBOOK.md`
+- `pilot/cohort_manifest.schema.v1.json`
 - `schemas/pilot_metrics.schema.v1.json`
 - `schemas/pilot_cohort.schema.v1.json`
 - `reports/PILOT_STATUS_TEMPLATE.md`
+- `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`

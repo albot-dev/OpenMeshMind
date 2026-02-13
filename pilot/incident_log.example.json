@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "incidents": [
+    {
+      "id": "INC-2026-001",
+      "issue_number": 0,
+      "severity": "SEV-2",
+      "started_utc": "2026-02-13T00:00:00+00:00",
+      "ended_utc": "2026-02-13T02:00:00+00:00",
+      "status": "resolved",
+      "impact_summary": "Intermittent node dropouts from one region.",
+      "follow_up_issue_numbers": []
+    }
+  ]
+}

@@ -9,6 +9,7 @@ from unittest import mock
 from scripts import check_baseline
 from scripts import check_benchmarks
 from scripts import check_classification
+from scripts import check_cohort_manifest
 from scripts import check_fairness
 from scripts import check_pilot_cohort
 from scripts import check_pilot_metrics
@@ -66,6 +67,94 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_baseline.main,
                 ["check_baseline.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_cohort_manifest_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            metrics = self._write_json(
+                tmp,
+                "node_a_metrics.json",
+                {
+                    "schema_version": 1,
+                    "node": {"node_id": "node-a01"},
+                    "health": {"last_cycle_ok": True},
+                },
+            )
+            valid = self._write_json(
+                tmp,
+                "cohort_ok.json",
+                {
+                    "schema_version": 1,
+                    "cohort_id": "pilot-cohort-test",
+                    "generated_utc": "2026-02-13T22:00:00+00:00",
+                    "nodes": [
+                        {
+                            "node_id": "node-a01",
+                            "region": "us-east",
+                            "hardware_tier": "mid",
+                            "cpu_cores": 8,
+                            "memory_gb": 16,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-13T22:00:00+00:00",
+                            "metrics_path": str(metrics),
+                            "failure_reason": "",
+                        }
+                    ],
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "cohort_bad.json",
+                {
+                    "schema_version": 1,
+                    "cohort_id": "pilot-cohort-test",
+                    "generated_utc": "2026-02-13T22:00:00+00:00",
+                    "nodes": [
+                        {
+                            "node_id": "node-b02",
+                            "region": "us-west",
+                            "hardware_tier": "low",
+                            "cpu_cores": 4,
+                            "memory_gb": 8,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "failed",
+                            "onboarding_checked_utc": "2026-02-13T22:00:00+00:00",
+                            "metrics_path": "missing.json",
+                            "failure_reason": "",
+                        }
+                    ],
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_cohort_manifest.main,
+                [
+                    "check_cohort_manifest.py",
+                    str(valid),
+                    "--min-nodes",
+                    "1",
+                    "--min-passed",
+                    "1",
+                    "--require-metrics-files",
+                ],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_cohort_manifest.main,
+                [
+                    "check_cohort_manifest.py",
+                    str(invalid),
+                    "--min-nodes",
+                    "1",
+                    "--min-passed",
+                    "1",
+                ],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

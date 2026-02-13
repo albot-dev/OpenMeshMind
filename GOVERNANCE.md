@@ -49,7 +49,14 @@ OpenMeshMind is designed to remain useful to the public and not become dependent
   - `scripts/check_pilot_metrics.py`
   - `schemas/pilot_cohort.schema.v1.json`
   - `scripts/check_pilot_cohort.py`
+- Cohort onboarding manifest and validator are tracked in:
+  - `pilot/cohort_manifest.schema.v1.json`
+  - `scripts/check_cohort_manifest.py`
 - Public pilot reporting should use `reports/PILOT_STATUS_TEMPLATE.md`.
+- Final pilot-window publication should use:
+  - `pilot/PILOT_14_DAY_RUNBOOK.md`
+  - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
+  - `scripts/generate_pilot_14_day_report.py`
 - Accepted pilot decisions must be linked to:
   - `DECISION_LOG.md`
   - public GitHub issue references

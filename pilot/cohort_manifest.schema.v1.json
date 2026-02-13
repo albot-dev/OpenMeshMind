@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmeshmind.dev/schemas/cohort_manifest.schema.v1.json",
+  "title": "OpenMeshMind Pilot Cohort Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "cohort_id",
+    "generated_utc",
+    "nodes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "cohort_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "generated_utc": {
+      "type": "string",
+      "minLength": 20
+    },
+    "notes": {
+      "type": "string"
+    },
+    "nodes": {
+      "type": "array"
+    }
+  }
+}

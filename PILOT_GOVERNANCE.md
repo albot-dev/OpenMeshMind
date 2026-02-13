@@ -14,10 +14,12 @@ This document defines the recurring governance process for active pilot operatio
 ## Weekly agenda
 
 1. Review latest pilot status report (`reports/pilot_status.md`).
-2. Review all open `pilot:*` incident issues.
-3. Review cohort metrics trend deltas (uptime, fairness, quality, communication).
-4. Confirm decision intake items from `PILOT_DECISION_INTAKE_TEMPLATE.md`.
-5. Record accepted decisions in `DECISION_LOG.md` with linked issue IDs.
+2. Review cohort onboarding summary (`pilot/cohort_onboarding_summary.json`).
+3. Review progress against 14-day runbook (`pilot/PILOT_14_DAY_RUNBOOK.md`).
+4. Review all open `pilot:*` incident issues.
+5. Review cohort metrics trend deltas (uptime, fairness, quality, communication).
+6. Confirm decision intake items from `PILOT_DECISION_INTAKE_TEMPLATE.md`.
+7. Record accepted decisions in `DECISION_LOG.md` with linked issue IDs.
 
 ## Ownership expectations
 

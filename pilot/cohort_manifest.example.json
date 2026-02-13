@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "cohort_id": "pilot-cohort-2026w08",
+  "generated_utc": "2026-02-13T00:00:00+00:00",
+  "notes": "Replace with real volunteer metadata before launch.",
+  "nodes": [
+    {
+      "node_id": "node-a01",
+      "region": "us-east",
+      "hardware_tier": "mid",
+      "cpu_cores": 8,
+      "memory_gb": 16,
+      "network_tier": "home-broadband",
+      "onboarding_status": "pending",
+      "onboarding_checked_utc": "",
+      "metrics_path": "pilot/nodes/node-a01/pilot_metrics.json",
+      "failure_reason": ""
+    },
+    {
+      "node_id": "node-b02",
+      "region": "us-west",
+      "hardware_tier": "low",
+      "cpu_cores": 4,
+      "memory_gb": 8,
+      "network_tier": "home-broadband",
+      "onboarding_status": "pending",
+      "onboarding_checked_utc": "",
+      "metrics_path": "pilot/nodes/node-b02/pilot_metrics.json",
+      "failure_reason": ""
+    },
+    {
+      "node_id": "node-c03",
+      "region": "eu-central",
+      "hardware_tier": "mid",
+      "cpu_cores": 6,
+      "memory_gb": 16,
+      "network_tier": "home-broadband",
+      "onboarding_status": "pending",
+      "onboarding_checked_utc": "",
+      "metrics_path": "pilot/nodes/node-c03/pilot_metrics.json",
+      "failure_reason": ""
+    },
+    {
+      "node_id": "node-d04",
+      "region": "ap-south",
+      "hardware_tier": "mid",
+      "cpu_cores": 8,
+      "memory_gb": 16,
+      "network_tier": "residential-fiber",
+      "onboarding_status": "pending",
+      "onboarding_checked_utc": "",
+      "metrics_path": "pilot/nodes/node-d04/pilot_metrics.json",
+      "failure_reason": ""
+    },
+    {
+      "node_id": "node-e05",
+      "region": "sa-east",
+      "hardware_tier": "low",
+      "cpu_cores": 4,
+      "memory_gb": 8,
+      "network_tier": "home-broadband",
+      "onboarding_status": "pending",
+      "onboarding_checked_utc": "",
+      "metrics_path": "pilot/nodes/node-e05/pilot_metrics.json",
+      "failure_reason": ""
+    }
+  ]
+}

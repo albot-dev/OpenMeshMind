@@ -122,6 +122,24 @@ jobs:
             --cohort-metrics pilot/pilot_cohort_metrics.json \
             --out reports/pilot_status.md
 
+      - name: Validate cohort manifest
+        run: |
+          python3 scripts/check_cohort_manifest.py \
+            pilot/cohort_manifest.json \
+            --expected-schema-version 1 \
+            --min-nodes 5 \
+            --min-passed 0 \
+            --summary-json-out pilot/cohort_onboarding_summary.json
+
+      - name: Generate draft 14-day pilot report
+        run: |
+          python3 scripts/generate_pilot_14_day_report.py \
+            --manifest pilot/cohort_manifest.json \
+            --onboarding-summary pilot/cohort_onboarding_summary.json \
+            --daily-cohort-glob 'pilot/runs/day*/pilot_cohort_metrics.json' \
+            --incident-log pilot/incident_log.json \
+            --out reports/pilot_14_day_report.md
+
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4
         with:
@@ -169,3 +187,9 @@ jobs:
         with:
           name: pilot-status-report
           path: reports/pilot_status.md
+
+      - name: Upload pilot 14-day draft report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-14-day-draft-report
+          path: reports/pilot_14_day_report.md

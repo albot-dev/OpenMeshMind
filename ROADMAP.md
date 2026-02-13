@@ -53,3 +53,8 @@
 - Aggregate cohort-level metrics (uptime/fairness/quality/communication).
 - Automate public pilot status reporting from machine-readable artifacts.
 - Enforce transparent pilot governance cadence and decision intake.
+- Execution artifacts in this repo:
+  - `pilot/COHORT_ONBOARDING_CHECKLIST.md`
+  - `pilot/PILOT_14_DAY_RUNBOOK.md`
+  - `pilot/cohort_manifest.schema.v1.json`
+  - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`

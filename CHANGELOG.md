@@ -54,6 +54,18 @@ All notable changes to OpenMeshMind are documented here.
 - Added pilot governance cadence and intake templates:
   - `PILOT_GOVERNANCE.md`
   - `PILOT_DECISION_INTAKE_TEMPLATE.md`
+- Added cohort onboarding manifest workflow:
+  - `pilot/cohort_manifest.schema.v1.json`
+  - `pilot/cohort_manifest.example.json`
+  - `pilot/cohort_manifest.json`
+  - `pilot/COHORT_ONBOARDING_CHECKLIST.md`
+  - `scripts/check_cohort_manifest.py`
+- Added 14-day pilot execution/report artifacts:
+  - `pilot/PILOT_14_DAY_RUNBOOK.md`
+  - `pilot/incident_log.example.json`
+  - `pilot/incident_log.json`
+  - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
+  - `scripts/generate_pilot_14_day_report.py`
 
 ## 2026-02-12
 
