@@ -180,11 +180,14 @@ def local_sgd_steps(
     data_x: list[dict[int, float]],
     data_y: list[int],
     steps: int,
+    batch_size: int,
     learning_rate: float,
     seed: int,
 ) -> tuple[list[list[float]], list[list[float]], list[float]]:
     if steps <= 0:
         raise ValueError("steps must be > 0.")
+    if batch_size <= 0:
+        raise ValueError("batch_size must be > 0.")
     if learning_rate <= 0.0:
         raise ValueError("learning_rate must be > 0.")
     if not data_x:
@@ -195,39 +198,51 @@ def local_sgd_steps(
     rng = random.Random(seed)
 
     for _ in range(steps):
-        idx = rng.randrange(len(data_x))
-        x = data_x[idx]
-        y = data_y[idx]
+        grad_bias = [0.0] * n_classes
+        grad_a = [[0.0] * rank for _ in range(n_classes)]
+        grad_b = [[0.0] * len(b[0]) for _ in range(rank)]
 
-        logits = logits_for_sample(x=x, base_w=base_w, a=a, b=b, bias=bias)
-        probs = softmax(logits)
-        errs = [probs[c] - (1.0 if c == y else 0.0) for c in range(n_classes)]
+        for _ in range(batch_size):
+            idx = rng.randrange(len(data_x))
+            x = data_x[idx]
+            y = data_y[idx]
 
-        # Precompute B * x.
-        bx = [0.0] * rank
-        for r in range(rank):
-            accum = 0.0
-            brow = b[r]
-            for j, value in x.items():
-                accum += brow[j] * value
-            bx[r] = accum
+            logits = logits_for_sample(x=x, base_w=base_w, a=a, b=b, bias=bias)
+            probs = softmax(logits)
+            errs = [probs[c] - (1.0 if c == y else 0.0) for c in range(n_classes)]
 
-        # Gradients for A and bias.
-        for c in range(n_classes):
-            err = errs[c]
-            bias[c] -= learning_rate * err
+            # Precompute B * x.
+            bx = [0.0] * rank
             for r in range(rank):
-                a[c][r] -= learning_rate * err * bx[r]
+                accum = 0.0
+                brow = b[r]
+                for j, value in x.items():
+                    accum += brow[j] * value
+                bx[r] = accum
 
-        # Gradients for B use current A and errs.
-        coeffs = [0.0] * rank
-        for r in range(rank):
-            coeffs[r] = sum(errs[c] * a[c][r] for c in range(n_classes))
+            for c in range(n_classes):
+                err = errs[c]
+                grad_bias[c] += err
+                for r in range(rank):
+                    grad_a[c][r] += err * bx[r]
+
+            coeffs = [0.0] * rank
+            for r in range(rank):
+                coeffs[r] = sum(errs[c] * a[c][r] for c in range(n_classes))
+            for r in range(rank):
+                coeff = coeffs[r]
+                for j, value in x.items():
+                    grad_b[r][j] += coeff * value
+
+        inv_batch = learning_rate / batch_size
+        for c in range(n_classes):
+            bias[c] -= inv_batch * grad_bias[c]
+            for r in range(rank):
+                a[c][r] -= inv_batch * grad_a[c][r]
         for r in range(rank):
             brow = b[r]
-            coeff = coeffs[r]
-            for j, value in x.items():
-                brow[j] -= learning_rate * coeff * value
+            for j in range(len(brow)):
+                brow[j] -= inv_batch * grad_b[r][j]
 
     return a, b, bias
 
@@ -319,6 +334,7 @@ def run_centralized(
     base_w: list[list[float]],
     rank: int,
     steps: int,
+    batch_size: int,
     learning_rate: float,
     seed: int,
 ) -> RunResult:
@@ -339,6 +355,7 @@ def run_centralized(
         data_x=train_x,
         data_y=train_y,
         steps=steps,
+        batch_size=batch_size,
         learning_rate=learning_rate,
         seed=seed + 1001,
     )
@@ -364,6 +381,7 @@ def run_fedavg(
     rank: int,
     rounds: int,
     local_steps: int,
+    batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
     seed: int,
@@ -403,6 +421,7 @@ def run_fedavg(
                 data_x=client_x,
                 data_y=client_y,
                 steps=local_steps,
+                batch_size=batch_size,
                 learning_rate=learning_rate,
                 seed=seed * 100 + round_idx * 17 + client_idx * 7 + 5,
             )
@@ -500,6 +519,7 @@ def run_once(
     n_clients: int,
     rounds: int,
     local_steps: int,
+    batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
     rank: int,
@@ -529,6 +549,7 @@ def run_once(
         rank=rank,
         # Match centralized update budget to total federated local step budget.
         steps=rounds * local_steps * n_clients,
+        batch_size=batch_size,
         learning_rate=learning_rate,
         seed=seed,
     )
@@ -542,6 +563,7 @@ def run_once(
             rank=rank,
             rounds=rounds,
             local_steps=local_steps,
+            batch_size=batch_size,
             learning_rate=learning_rate,
             sparse_ratio=sparse_ratio,
             seed=seed,
@@ -556,6 +578,7 @@ def run_experiment(
     n_clients: int,
     rounds: int,
     local_steps: int,
+    batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
     rank: int,
@@ -578,6 +601,7 @@ def run_experiment(
             n_clients=n_clients,
             rounds=rounds,
             local_steps=local_steps,
+            batch_size=batch_size,
             learning_rate=learning_rate,
             sparse_ratio=sparse_ratio,
             rank=rank,
@@ -592,6 +616,7 @@ def run_experiment(
         "n_clients": n_clients,
         "rounds": rounds,
         "local_steps": local_steps,
+        "batch_size": batch_size,
         "learning_rate": learning_rate,
         "sparse_ratio": sparse_ratio,
         "rank": rank,
@@ -644,7 +669,8 @@ def main() -> None:
     parser.add_argument("--n-clients", type=int, default=5)
     parser.add_argument("--rounds", type=int, default=20)
     parser.add_argument("--local-steps", type=int, default=10)
-    parser.add_argument("--learning-rate", type=float, default=0.3)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--learning-rate", type=float, default=0.26)
     parser.add_argument("--sparse-ratio", type=float, default=0.2)
     parser.add_argument("--rank", type=int, default=4, help="Adapter rank.")
     parser.add_argument("--non-iid-severity", type=float, default=1.2)
@@ -661,6 +687,7 @@ def main() -> None:
         n_clients=args.n_clients,
         rounds=args.rounds,
         local_steps=args.local_steps,
+        batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         sparse_ratio=args.sparse_ratio,
         rank=args.rank,

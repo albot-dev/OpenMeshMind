@@ -87,7 +87,8 @@ jobs:
             --samples-per-intent 12 \
             --rounds 20 \
             --local-steps 10 \
-            --learning-rate 0.3 \
+            --batch-size 8 \
+            --learning-rate 0.26 \
             --quiet \
             --json-out adapter_intent_metrics.json
 
