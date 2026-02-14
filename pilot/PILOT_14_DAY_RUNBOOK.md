@@ -5,6 +5,17 @@ This runbook defines daily execution for the first 14-day volunteer pilot window
 ## Before day 1
 
 - Finalize `pilot/cohort_manifest.json` from `pilot/cohort_manifest.example.json`.
+- If running solo across personal machines, first import all onboarding bundles:
+
+```bash
+python3 scripts/solo_multi_machine_mode.py \
+  --bundles-glob 'pilot/submissions/*_onboarding_*.tgz' \
+  --min-nodes 5 \
+  --min-passed 5 \
+  --require-metrics-files \
+  --no-pipeline
+```
+
 - Validate cohort readiness:
 
 ```bash

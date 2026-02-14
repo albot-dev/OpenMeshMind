@@ -53,3 +53,11 @@ python3 scripts/check_cohort_manifest.py \
 - Include onboarding startup/failure rates in pilot status report.
 - Save per-node metrics artifacts under `pilot/nodes/<node_id>/`.
 - Link onboarding summary in issue `#21`.
+- For solo multi-machine collection, ingest all local bundles and auto-update manifest:
+```bash
+python3 scripts/solo_multi_machine_mode.py \
+  --bundles-glob 'pilot/submissions/*_onboarding_*.tgz' \
+  --min-nodes 5 \
+  --min-passed 5 \
+  --require-metrics-files
+```

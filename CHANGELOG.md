@@ -68,6 +68,8 @@ All notable changes to OpenMeshMind are documented here.
   - `scripts/generate_pilot_14_day_report.py`
 - Added one-command volunteer bootstrap script:
   - `scripts/volunteer_node_setup.sh`
+- Added solo multi-machine ingest/automation command:
+  - `scripts/solo_multi_machine_mode.py`
 
 ## 2026-02-12
 

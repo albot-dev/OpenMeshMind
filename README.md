@@ -149,6 +149,7 @@ Run volunteer pilot node cycle and health checks:
 ```bash
 cp pilot/node_config.example.json pilot/node_config.json
 bash scripts/volunteer_node_setup.sh --node-id volunteer-node-001
+python3 scripts/solo_multi_machine_mode.py --help
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --once
 python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
@@ -172,6 +173,13 @@ python3 scripts/generate_pilot_14_day_report.py \
   --incident-log pilot/incident_log.json \
   --out reports/pilot_14_day_report.md \
   --bundle-out reports/pilot_14_day_artifacts.tgz
+
+# Solo operator import mode (collect bundles from multiple personal machines)
+python3 scripts/solo_multi_machine_mode.py \
+  --bundles-glob 'pilot/submissions/*_onboarding_*.tgz' \
+  --min-nodes 5 \
+  --min-passed 5 \
+  --require-metrics-files
 ```
 
 Pilot operations references:
@@ -185,6 +193,7 @@ Pilot operations references:
 - `pilot/cohort_manifest.schema.v1.json`
 - `pilot/cohort_manifest.example.json`
 - `scripts/volunteer_node_setup.sh`
+- `scripts/solo_multi_machine_mode.py`
 - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
 - `schemas/pilot_metrics.schema.v1.json`
 - `schemas/pilot_cohort.schema.v1.json`

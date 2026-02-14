@@ -10,6 +10,9 @@ Options:
   --node-id <id>               Node identifier (default: generated from hostname+timestamp)
   --repo <owner/repo>          GitHub repository slug (default: inferred from git remote)
   --mode <label>               Pilot mode label (default: reduced)
+  --region <label>             Node region label (default: unknown)
+  --hardware-tier <label>      Node hardware tier label (default: unknown)
+  --network-tier <label>       Node network tier label (default: unknown)
   --cycle-interval-sec <int>   Interval between cycles in loop mode (default: 1800)
   --max-cycles <int>           Max cycles for loop mode, 0 means continuous (default: 0)
   --min-uptime-ratio <float>   Health-check threshold (default: 0.90)
@@ -37,6 +40,9 @@ PYTHON_BIN="python3"
 CONFIG_PATH="pilot/node_config.json"
 TOKEN_ENV_VAR="github_token"
 MODE="reduced"
+REGION="unknown"
+HARDWARE_TIER="unknown"
+NETWORK_TIER="unknown"
 CYCLE_INTERVAL_SEC="1800"
 MAX_CYCLES="0"
 MIN_UPTIME_RATIO="0.90"
@@ -57,6 +63,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --mode)
       MODE="$2"
+      shift 2
+      ;;
+    --region)
+      REGION="$2"
+      shift 2
+      ;;
+    --hardware-tier)
+      HARDWARE_TIER="$2"
+      shift 2
+      ;;
+    --network-tier)
+      NETWORK_TIER="$2"
       shift 2
       ;;
     --cycle-interval-sec)
@@ -195,6 +213,7 @@ NODE_ROOT_DIR="pilot/nodes/${NODE_ID}"
 METRICS_OUT="${NODE_ROOT_DIR}/pilot_metrics.json"
 STATE_OUT="${NODE_ROOT_DIR}/node_state.json"
 LOG_OUT="${NODE_ROOT_DIR}/node_runner.log"
+PROFILE_OUT="${NODE_ROOT_DIR}/node_profile.json"
 
 "${PYTHON_BIN}" - "${ROOT_DIR}" "${CONFIG_PATH}" "${NODE_ID}" "${MODE}" "${CYCLE_INTERVAL_SEC}" "${MAX_CYCLES}" "${REPO}" "${TOKEN_ENV_VAR}" "${METRICS_OUT}" "${STATE_OUT}" "${LOG_OUT}" <<'PY'
 import json
@@ -252,13 +271,70 @@ echo "Running health check"
 echo "Validating pilot metrics artifact"
 "${PYTHON_BIN}" scripts/check_pilot_metrics.py "${METRICS_OUT}" --require-status-collected
 
+echo "Writing node profile metadata"
+"${PYTHON_BIN}" - "${PROFILE_OUT}" "${NODE_ID}" "${REGION}" "${HARDWARE_TIER}" "${NETWORK_TIER}" <<'PY'
+import json
+import math
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+profile_out = Path(sys.argv[1])
+node_id = sys.argv[2]
+region = sys.argv[3]
+hardware_tier = sys.argv[4]
+network_tier = sys.argv[5]
+
+cpu_cores = os.cpu_count() or 1
+memory_gb = 0
+
+try:
+    if hasattr(os, "sysconf"):
+        page_size = os.sysconf("SC_PAGE_SIZE")
+        phys_pages = os.sysconf("SC_PHYS_PAGES")
+        if isinstance(page_size, int) and isinstance(phys_pages, int):
+            total_bytes = page_size * phys_pages
+            if total_bytes > 0:
+                memory_gb = int(math.ceil(total_bytes / (1024 ** 3)))
+except (ValueError, OSError, AttributeError):
+    pass
+
+if memory_gb <= 0:
+    try:
+        out = subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True).strip()
+        total_bytes = int(out)
+        if total_bytes > 0:
+            memory_gb = int(math.ceil(total_bytes / (1024 ** 3)))
+    except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
+        memory_gb = 1
+
+payload = {
+    "schema_version": 1,
+    "node_id": node_id,
+    "region": region,
+    "hardware_tier": hardware_tier,
+    "network_tier": network_tier,
+    "cpu_cores": int(cpu_cores),
+    "memory_gb": int(memory_gb),
+    "generated_utc": datetime.now(timezone.utc).isoformat(),
+}
+
+profile_out.parent.mkdir(parents=True, exist_ok=True)
+with profile_out.open("w", encoding="utf-8") as f:
+    json.dump(payload, f, indent=2, sort_keys=True)
+
+print(f"Wrote node profile: {profile_out}")
+PY
+
 if [[ "${SKIP_BUNDLE}" == "0" ]]; then
   mkdir -p pilot/submissions
   TS="$(date -u +%Y%m%dT%H%M%SZ)"
   BUNDLE="pilot/submissions/${NODE_ID}_onboarding_${TS}.tgz"
 
   FILES=()
-  for path in "${CONFIG_PATH}" "${METRICS_OUT}" "${STATE_OUT}" "${LOG_OUT}"; do
+  for path in "${CONFIG_PATH}" "${METRICS_OUT}" "${STATE_OUT}" "${LOG_OUT}" "${PROFILE_OUT}"; do
     if [[ -f "${path}" ]]; then
       FILES+=("${path}")
     fi
