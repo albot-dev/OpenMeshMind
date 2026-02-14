@@ -18,14 +18,18 @@ All notable changes to OpenMeshMind are documented here.
 - Added generality evaluation and validation gates:
   - `scripts/evaluate_generality.py`
   - `scripts/check_generality.py`
+  - `scripts/reproducibility_sweep.py`
+  - `scripts/check_reproducibility.py`
   - `docs/MVP_CRITERIA.md`
 - Added unit tests for the runtime and evaluator:
   - `tests/test_fedavg_adapter_intent.py`
   - `tests/test_local_generalist_runtime.py`
   - `tests/test_evaluate_generality.py`
+  - `tests/test_reproducibility_sweep.py`
 - Extended validator test coverage for generality metrics in `tests/test_validation_scripts.py`.
 - Integrated generality evaluation into low-end smoke path (`scripts/smoke_check.py`).
 - Included `generality_metrics.json` in weekly report artifact expectations and summary generation (`scripts/generate_weekly_report.py`).
+- Included adapter and reproducibility artifacts in weekly/release automation and CI workflow gates.
 - Updated project docs to include MVP gate usage and threshold references:
   - `README.md`
   - `CONTRIBUTING.md`

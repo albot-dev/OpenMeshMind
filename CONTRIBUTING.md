@@ -34,6 +34,8 @@ python3 experiments/fedavg_adapter_intent.py --json-out adapter_intent_metrics.j
 python3 scripts/check_adapter_intent.py adapter_intent_metrics.json
 python3 scripts/evaluate_generality.py --json-out generality_metrics.json
 python3 scripts/check_generality.py generality_metrics.json
+python3 scripts/reproducibility_sweep.py --seeds 7,17,27 --json-out reproducibility_metrics.json
+python3 scripts/check_reproducibility.py reproducibility_metrics.json
 ```
 
 ## Low-end quickstart

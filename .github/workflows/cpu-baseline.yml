@@ -80,6 +80,43 @@ jobs:
             --min-int8-gap-improvement 0.05 \
             --min-int8-contributed-clients-gain 0.5
 
+      - name: Run federated adapter proxy experiment
+        run: |
+          python3 experiments/fedavg_adapter_intent.py \
+            --seeds 7 \
+            --samples-per-intent 12 \
+            --rounds 20 \
+            --local-steps 10 \
+            --learning-rate 0.3 \
+            --quiet \
+            --json-out adapter_intent_metrics.json
+
+      - name: Validate adapter proxy metrics
+        run: |
+          python3 scripts/check_adapter_intent.py adapter_intent_metrics.json \
+            --expected-schema-version 1
+
+      - name: Run generality evaluation
+        run: |
+          python3 scripts/evaluate_generality.py --quiet --json-out generality_metrics.json
+
+      - name: Validate generality metrics
+        run: |
+          python3 scripts/check_generality.py generality_metrics.json \
+            --expected-schema-version 1
+
+      - name: Run reproducibility sweep
+        run: |
+          python3 scripts/reproducibility_sweep.py \
+            --seeds 7,17,27 \
+            --quiet \
+            --json-out reproducibility_metrics.json
+
+      - name: Validate reproducibility metrics
+        run: |
+          python3 scripts/check_reproducibility.py reproducibility_metrics.json \
+            --expected-schema-version 1
+
       - name: Run reduced benchmark suite
         run: |
           python3 scripts/benchmark_suite.py --mode reduced --quiet --json-out benchmark_metrics.json
@@ -169,6 +206,24 @@ jobs:
         with:
           name: utility-fairness-metrics
           path: utility_fairness_metrics.json
+
+      - name: Upload adapter proxy metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adapter-intent-metrics
+          path: adapter_intent_metrics.json
+
+      - name: Upload generality metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generality-metrics
+          path: generality_metrics.json
+
+      - name: Upload reproducibility metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reproducibility-metrics
+          path: reproducibility_metrics.json
 
       - name: Upload pilot metrics artifact
         uses: actions/upload-artifact@v4

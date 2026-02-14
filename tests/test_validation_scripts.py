@@ -15,6 +15,7 @@ from scripts import check_fairness
 from scripts import check_generality
 from scripts import check_pilot_cohort
 from scripts import check_pilot_metrics
+from scripts import check_reproducibility
 from scripts import check_utility_fairness
 
 
@@ -347,6 +348,62 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_generality.main,
                 ["check_generality.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_reproducibility_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "repro_ok.json",
+                {
+                    "schema_version": 1,
+                    "runs": [
+                        {"seed": 7},
+                        {"seed": 17},
+                        {"seed": 27},
+                    ],
+                    "summary": {
+                        "overall_score": {"mean": 0.86, "std": 0.03},
+                        "classification_accuracy": {"mean": 0.92},
+                        "retrieval_recall_at_1": {"mean": 0.82},
+                        "instruction_pass_rate": {"mean": 0.80},
+                        "tool_pass_rate": {"mean": 0.95},
+                        "int8_accuracy_drop": {"mean": 0.04},
+                        "int8_comm_savings_percent": {"mean": 72.0},
+                    },
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "repro_bad.json",
+                {
+                    "schema_version": 1,
+                    "runs": [{"seed": 7}],
+                    "summary": {
+                        "overall_score": {"mean": 0.50, "std": 0.20},
+                        "classification_accuracy": {"mean": 0.60},
+                        "retrieval_recall_at_1": {"mean": 0.40},
+                        "instruction_pass_rate": {"mean": 0.50},
+                        "tool_pass_rate": {"mean": 0.70},
+                        "int8_accuracy_drop": {"mean": 0.30},
+                        "int8_comm_savings_percent": {"mean": 20.0},
+                    },
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_reproducibility.main,
+                ["check_reproducibility.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_reproducibility.main,
+                ["check_reproducibility.py", str(invalid)],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

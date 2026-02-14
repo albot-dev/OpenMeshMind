@@ -40,9 +40,12 @@
   - instruction-following compliance
   - tool-use correctness
   - centralized vs federated reference deltas
+- Enforce multi-seed reproducibility sweeps on generality metrics.
 - Produce machine-readable gate artifacts:
   - `scripts/evaluate_generality.py`
   - `scripts/check_generality.py`
+  - `scripts/reproducibility_sweep.py`
+  - `scripts/check_reproducibility.py`
   - `docs/MVP_CRITERIA.md`
 
 ## Phase 5: Governance and openness

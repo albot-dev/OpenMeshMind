@@ -262,6 +262,28 @@ def main() -> int:
                         "1",
                     ],
                 ),
+                (
+                    "reproducibility_sweep_run",
+                    [
+                        sys.executable,
+                        "scripts/reproducibility_sweep.py",
+                        "--seeds",
+                        "7,17,27",
+                        "--json-out",
+                        "reproducibility_metrics.json",
+                        "--quiet",
+                    ],
+                ),
+                (
+                    "reproducibility_sweep_check",
+                    [
+                        sys.executable,
+                        "scripts/check_reproducibility.py",
+                        "reproducibility_metrics.json",
+                        "--expected-schema-version",
+                        "1",
+                    ],
+                ),
             ]
         )
 

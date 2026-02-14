@@ -21,6 +21,7 @@ DEFAULT_ARTIFACTS = [
     "classification_metrics.json",
     "generality_metrics.json",
     "adapter_intent_metrics.json",
+    "reproducibility_metrics.json",
     "benchmark_metrics.json",
     "fairness_metrics.json",
     "utility_fedavg_metrics.json",
@@ -242,6 +243,32 @@ def generality_summary(generality: dict[str, object] | None) -> list[str]:
     return lines
 
 
+def reproducibility_summary(repro: dict[str, object] | None) -> list[str]:
+    if not repro:
+        return ["reproducibility_metrics.json not found."]
+    summary = repro.get("summary", {})
+    overall = summary.get("overall_score", {})
+    lines = [
+        "reproducibility overall:"
+        f" mean={overall.get('mean')}, std={overall.get('std')}, min={overall.get('min')}"
+    ]
+    instruction = summary.get("instruction_pass_rate", {})
+    tool = summary.get("tool_pass_rate", {})
+    lines.append(
+        "reproducibility instruction/tool means:"
+        f" instruction={instruction.get('mean')}, tool={tool.get('mean')}"
+    )
+    int8_drop = summary.get("int8_accuracy_drop")
+    int8_save = summary.get("int8_comm_savings_percent")
+    if int8_drop and int8_save:
+        lines.append(
+            "reproducibility distributed int8:"
+            f" drop_mean={int8_drop.get('mean')},"
+            f" comm_savings_mean={int8_save.get('mean')}"
+        )
+    return lines
+
+
 def build_report(
     repo: str,
     gh_status: dict[str, object],
@@ -254,6 +281,7 @@ def build_report(
     utility = load_json(ROOT / "utility_fedavg_metrics.json")
     adapter = load_json(ROOT / "adapter_intent_metrics.json")
     utility_fairness = load_json(ROOT / "utility_fairness_metrics.json")
+    reproducibility = load_json(ROOT / "reproducibility_metrics.json")
     smoke = load_json(ROOT / "smoke_summary.json")
     generality = load_json(ROOT / "generality_metrics.json")
 
@@ -302,6 +330,8 @@ def build_report(
             f"macro_f1={classification['metrics'].get('macro_f1')}"
         )
     for item in generality_summary(generality):
+        lines.append(f"- {item}")
+    for item in reproducibility_summary(reproducibility):
         lines.append(f"- {item}")
     lines.append("")
     lines.append("### Accessibility")

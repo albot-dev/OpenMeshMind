@@ -152,6 +152,8 @@ Run generalist MVP evaluation gate:
 ```bash
 python3 scripts/evaluate_generality.py --json-out generality_metrics.json
 python3 scripts/check_generality.py generality_metrics.json
+python3 scripts/reproducibility_sweep.py --seeds 7,17,27 --json-out reproducibility_metrics.json
+python3 scripts/check_reproducibility.py reproducibility_metrics.json
 ```
 
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.

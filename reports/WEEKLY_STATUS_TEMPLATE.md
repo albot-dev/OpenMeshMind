@@ -26,12 +26,15 @@
 
 - Baseline quality:
 - Utility classification quality:
+- Generality gate score:
+- Adapter proxy quality:
 
 ### Accessibility
 
 - Reduced benchmark runtime:
 - Peak memory envelope:
 - Smoke path runtime:
+- Reproducibility sweep stability (mean/std):
 
 ### Decentralization/Fairness
 

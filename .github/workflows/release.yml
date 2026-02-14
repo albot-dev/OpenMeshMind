@@ -33,6 +33,9 @@ jobs:
           cp fairness_metrics.json release-artifacts/
           cp utility_fedavg_metrics.json release-artifacts/
           cp utility_fairness_metrics.json release-artifacts/
+          cp adapter_intent_metrics.json release-artifacts/
+          cp generality_metrics.json release-artifacts/
+          cp reproducibility_metrics.json release-artifacts/
           cp smoke_summary.json release-artifacts/
           cp CHANGELOG.md release-artifacts/
           cp DECISION_LOG.md release-artifacts/
