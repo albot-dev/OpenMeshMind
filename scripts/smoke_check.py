@@ -129,6 +129,8 @@ def main() -> int:
                 "8",
                 "--learning-rate",
                 "0.26",
+                "--int8-clip-percentile",
+                "0.98",
                 "--quiet",
                 "--json-out",
                 "adapter_intent_metrics.json",

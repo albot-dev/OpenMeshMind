@@ -27,7 +27,7 @@ def main() -> int:
     parser.add_argument("--min-tool-pass-rate-mean", type=float, default=0.80)
     parser.add_argument("--max-int8-accuracy-drop-mean", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-mean", type=float, default=40.0)
-    parser.add_argument("--max-adapter-int8-accuracy-drop-mean", type=float, default=0.20)
+    parser.add_argument("--max-adapter-int8-accuracy-drop-mean", type=float, default=0.12)
     parser.add_argument("--min-adapter-int8-comm-savings-mean", type=float, default=40.0)
     args = parser.parse_args()
 

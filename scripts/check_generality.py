@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument("--max-total-runtime-sec", type=float, default=180.0)
     parser.add_argument("--max-int8-accuracy-drop", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-percent", type=float, default=40.0)
-    parser.add_argument("--max-adapter-int8-accuracy-drop", type=float, default=0.20)
+    parser.add_argument("--max-adapter-int8-accuracy-drop", type=float, default=0.15)
     parser.add_argument("--min-adapter-int8-comm-savings-percent", type=float, default=40.0)
     args = parser.parse_args()
 

@@ -267,6 +267,7 @@ def evaluate_adapter_reference(seed: int) -> dict[str, object]:
         batch_size=8,
         learning_rate=0.26,
         sparse_ratio=0.2,
+        int8_clip_percentile=0.98,
         rank=4,
         non_iid_severity=1.2,
     )

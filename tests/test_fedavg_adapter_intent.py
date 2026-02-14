@@ -15,6 +15,7 @@ class FedAvgAdapterIntentTests(unittest.TestCase):
             batch_size=8,
             learning_rate=0.14,
             sparse_ratio=0.25,
+            int8_clip_percentile=0.98,
             rank=3,
             non_iid_severity=1.0,
         )
@@ -40,6 +41,7 @@ class FedAvgAdapterIntentTests(unittest.TestCase):
                 batch_size=8,
                 learning_rate=0.14,
                 sparse_ratio=0.2,
+                int8_clip_percentile=0.98,
                 rank=2,
                 non_iid_severity=1.0,
             )

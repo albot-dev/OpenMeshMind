@@ -18,7 +18,8 @@ All notable changes to OpenMeshMind are documented here.
 - Improved adapter int8 quality via segmented quantization across parameter sections.
 - Switched adapter local training to mini-batch updates for more stable convergence.
 - Added adapter reference metrics to the generality and reproducibility gate pipelines.
-- Tightened adapter int8 quality gates (`max drop <= 0.20`) after stabilization sweep.
+- Added per-section percentile clipping before adapter int8 quantization.
+- Tightened adapter int8 quality gates (`max drop <= 0.15`) after stabilization sweep.
 - Added generality evaluation and validation gates:
   - `scripts/evaluate_generality.py`
   - `scripts/check_generality.py`

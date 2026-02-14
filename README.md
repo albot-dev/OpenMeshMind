@@ -89,7 +89,13 @@ Sample federated utility summary: `reports/fedavg_classification_utility.md`.
 Run federated adapter-style intent training (low-rank adapter proxy):
 
 ```bash
-python3 experiments/fedavg_adapter_intent.py --json-out adapter_intent_metrics.json
+python3 experiments/fedavg_adapter_intent.py \
+  --rounds 20 \
+  --local-steps 10 \
+  --batch-size 8 \
+  --learning-rate 0.26 \
+  --int8-clip-percentile 0.98 \
+  --json-out adapter_intent_metrics.json
 python3 scripts/check_adapter_intent.py adapter_intent_metrics.json
 ```
 

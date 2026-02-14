@@ -126,17 +126,43 @@ def quantize_int8_segmented(delta: list[float], section_sizes: list[int]) -> tup
     return restored, total_bytes
 
 
+def clip_by_percentile(values: list[float], percentile: float) -> list[float]:
+    if not values:
+        return values
+    if percentile >= 1.0:
+        return list(values)
+    if percentile <= 0.0:
+        return [0.0 for _ in values]
+    abs_sorted = sorted(abs(v) for v in values)
+    idx = int(percentile * (len(abs_sorted) - 1))
+    cap = abs_sorted[idx]
+    if cap <= 0.0:
+        return list(values)
+    return [max(-cap, min(cap, v)) for v in values]
+
+
 def compress_delta(
     delta: list[float],
     mode: str,
     sparse_ratio: float,
     int8_section_sizes: list[int] | None = None,
+    int8_clip_percentile: float = 1.0,
 ) -> tuple[list[float], int]:
     if mode == "fp32":
         return delta, len(delta) * 4
     if mode == "int8":
         if int8_section_sizes:
+            if int8_clip_percentile < 1.0:
+                clipped: list[float] = []
+                offset = 0
+                for size in int8_section_sizes:
+                    segment = delta[offset : offset + size]
+                    clipped.extend(clip_by_percentile(segment, percentile=int8_clip_percentile))
+                    offset += size
+                return quantize_int8_segmented(delta=clipped, section_sizes=int8_section_sizes)
             return quantize_int8_segmented(delta=delta, section_sizes=int8_section_sizes)
+        if int8_clip_percentile < 1.0:
+            delta = clip_by_percentile(delta, percentile=int8_clip_percentile)
         q, scale = fed.quantize_int8(delta)
         restored = fed.dequantize_int8(q, scale)
         return restored, len(q) + 4
@@ -384,6 +410,7 @@ def run_fedavg(
     batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
+    int8_clip_percentile: float,
     seed: int,
 ) -> RunResult:
     n_classes = len(base_w)
@@ -433,6 +460,7 @@ def run_fedavg(
                 mode=mode,
                 sparse_ratio=sparse_ratio,
                 int8_section_sizes=int8_section_sizes,
+                int8_clip_percentile=int8_clip_percentile,
             )
             total_uplink += bytes_sent
 
@@ -522,6 +550,7 @@ def run_once(
     batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
+    int8_clip_percentile: float,
     rank: int,
     non_iid_severity: float,
 ) -> dict[str, RunResult]:
@@ -566,6 +595,7 @@ def run_once(
             batch_size=batch_size,
             learning_rate=learning_rate,
             sparse_ratio=sparse_ratio,
+            int8_clip_percentile=int8_clip_percentile,
             seed=seed,
         )
     return result
@@ -581,6 +611,7 @@ def run_experiment(
     batch_size: int,
     learning_rate: float,
     sparse_ratio: float,
+    int8_clip_percentile: float,
     rank: int,
     non_iid_severity: float,
 ) -> dict[str, object]:
@@ -604,6 +635,7 @@ def run_experiment(
             batch_size=batch_size,
             learning_rate=learning_rate,
             sparse_ratio=sparse_ratio,
+            int8_clip_percentile=int8_clip_percentile,
             rank=rank,
             non_iid_severity=non_iid_severity,
         )
@@ -619,6 +651,7 @@ def run_experiment(
         "batch_size": batch_size,
         "learning_rate": learning_rate,
         "sparse_ratio": sparse_ratio,
+        "int8_clip_percentile": int8_clip_percentile,
         "rank": rank,
         "non_iid_severity": non_iid_severity,
     }
@@ -672,6 +705,12 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=0.26)
     parser.add_argument("--sparse-ratio", type=float, default=0.2)
+    parser.add_argument(
+        "--int8-clip-percentile",
+        type=float,
+        default=0.98,
+        help="Per-section clipping percentile before int8 quantization (default: 0.98).",
+    )
     parser.add_argument("--rank", type=int, default=4, help="Adapter rank.")
     parser.add_argument("--non-iid-severity", type=float, default=1.2)
     parser.add_argument("--quiet", action="store_true")
@@ -690,6 +729,7 @@ def main() -> None:
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         sparse_ratio=args.sparse_ratio,
+        int8_clip_percentile=args.int8_clip_percentile,
         rank=args.rank,
         non_iid_severity=args.non_iid_severity,
     )
