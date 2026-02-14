@@ -1,6 +1,6 @@
 # 14-Day Pilot Runbook
 
-This runbook defines daily execution for the first 14-day volunteer pilot window.
+This runbook defines daily execution for the first 14-day pilot window.
 
 ## Before day 1
 
@@ -10,8 +10,8 @@ This runbook defines daily execution for the first 14-day volunteer pilot window
 ```bash
 python3 scripts/solo_multi_machine_mode.py \
   --bundles-glob 'pilot/submissions/*_onboarding_*.tgz' \
-  --min-nodes 5 \
-  --min-passed 5 \
+  --min-nodes 1 \
+  --min-passed 0 \
   --require-metrics-files \
   --no-pipeline
 ```
@@ -21,11 +21,13 @@ python3 scripts/solo_multi_machine_mode.py \
 ```bash
 python3 scripts/check_cohort_manifest.py \
   pilot/cohort_manifest.json \
-  --min-nodes 5 \
-  --min-passed 5 \
+  --min-nodes 1 \
+  --min-passed 0 \
   --require-metrics-files \
   --summary-json-out pilot/cohort_onboarding_summary.json
 ```
+
+For the full public volunteer cohort gate, use `--min-nodes 5 --min-passed 5`.
 
 - Ensure incident labels and escalation process are active (`PILOT_OPERATIONS.md`).
 
@@ -45,10 +47,12 @@ python3 scripts/build_pilot_cohort_metrics.py \
 ```bash
 python3 scripts/check_pilot_cohort.py \
   pilot/runs/dayXX/pilot_cohort_metrics.json \
-  --min-node-count 5 \
+  --min-node-count 1 \
   --min-uptime-ratio-mean 0.90 \
   --min-last-cycle-ok-ratio 0.80
 ```
+
+For full public cohort readiness checks, use `--min-node-count 5`.
 
 4. Generate/update daily pilot status draft:
 

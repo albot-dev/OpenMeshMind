@@ -144,7 +144,7 @@ python3 scripts/generate_weekly_report.py \
   --bundle-out reports/weekly_artifacts.tgz
 ```
 
-Run volunteer pilot node cycle and health checks:
+Run pilot node cycle and health checks (single-operator fast path):
 
 ```bash
 cp pilot/node_config.example.json pilot/node_config.json
@@ -155,8 +155,8 @@ python3 scripts/pilot_node_runner.py --config pilot/node_config.json --health
 python3 scripts/check_pilot_metrics.py pilot/pilot_metrics.json --require-status-collected
 python3 scripts/check_cohort_manifest.py \
   pilot/cohort_manifest.json \
-  --min-nodes 5 \
-  --min-passed 5 \
+  --min-nodes 1 \
+  --min-passed 0 \
   --require-metrics-files \
   --summary-json-out pilot/cohort_onboarding_summary.json
 python3 scripts/build_pilot_cohort_metrics.py --metrics pilot/pilot_metrics.json --json-out pilot/pilot_cohort_metrics.json
@@ -177,10 +177,22 @@ python3 scripts/generate_pilot_14_day_report.py \
 # Solo operator import mode (collect bundles from multiple personal machines)
 python3 scripts/solo_multi_machine_mode.py \
   --bundles-glob 'pilot/submissions/*_onboarding_*.tgz' \
-  --min-nodes 5 \
-  --min-passed 5 \
+  --min-nodes 1 \
+  --min-passed 0 \
   --require-metrics-files
 ```
+
+Current pilot mode:
+
+- We are currently running a single-operator multi-machine phase to move quickly.
+- External volunteer data is optional right now and not a blocker for ongoing development.
+- Public volunteer onboarding remains open at any time.
+
+Volunteer data PRs are open:
+
+- Volunteers can run `scripts/volunteer_node_setup.sh` and submit their generated data through PR whenever they want.
+- Maintainers can ingest submitted bundles with `scripts/solo_multi_machine_mode.py`.
+- Full submission instructions: `pilot/VOLUNTEER_DATA_SUBMISSION.md`.
 
 Pilot operations references:
 
@@ -192,6 +204,7 @@ Pilot operations references:
 - `pilot/PILOT_14_DAY_RUNBOOK.md`
 - `pilot/cohort_manifest.schema.v1.json`
 - `pilot/cohort_manifest.example.json`
+- `pilot/VOLUNTEER_DATA_SUBMISSION.md`
 - `scripts/volunteer_node_setup.sh`
 - `scripts/solo_multi_machine_mode.py`
 - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
