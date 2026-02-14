@@ -134,6 +134,21 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 
 Runtime/memory expectations and troubleshooting: `reports/low_end_smoke_path.md`.
 
+Run local generalist runtime (intent routing + retrieval + tool use + memory):
+
+```bash
+python3 scripts/local_generalist_runtime.py --interactive
+```
+
+Run generalist MVP evaluation gate:
+
+```bash
+python3 scripts/evaluate_generality.py --json-out generality_metrics.json
+python3 scripts/check_generality.py generality_metrics.json
+```
+
+MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
+
 Release process and tagging workflow: `RELEASE.md`.
 
 Weekly public status generation (report + artifact bundle):
@@ -223,6 +238,7 @@ Pilot operations references:
 - `PROVENANCE_TEMPLATE.md`
 - `CHANGELOG.md`
 - `PROJECTS.md`
+- `docs/MVP_CRITERIA.md`
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
 - `PILOT_GOVERNANCE.md`

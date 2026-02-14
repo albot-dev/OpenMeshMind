@@ -26,13 +26,31 @@
 - Optimize for low-RAM environments.
 - Record energy/time/cost benchmarks.
 
-## Phase 4: Governance and openness
+## Phase 4: Local generalist MVP gate
+
+- Ship a local generalist runtime that combines:
+  - intent routing via a lightweight CPU model
+  - retrieval against local corpus
+  - deterministic tool execution
+  - short-term conversational memory
+- Enforce generality gate with explicit thresholds:
+  - classification
+  - retrieval
+  - instruction-following compliance
+  - tool-use correctness
+  - centralized vs federated reference deltas
+- Produce machine-readable gate artifacts:
+  - `scripts/evaluate_generality.py`
+  - `scripts/check_generality.py`
+  - `docs/MVP_CRITERIA.md`
+
+## Phase 5: Governance and openness
 
 - Document model/data provenance.
 - Define transparent contribution and release policy.
 - Adopt a clear open license and public issue/decision process.
 
-## Phase 5: Public network pilot
+## Phase 6: Public network pilot
 
 - Deploy a small volunteer node network.
 - Measure:
@@ -47,7 +65,7 @@
   - `schemas/pilot_cohort.schema.v1.json`
   - `reports/PILOT_STATUS_TEMPLATE.md`
 
-## Phase 6: Public pilot execution
+## Phase 7: Public pilot execution
 
 - Onboard first volunteer node cohort and run recurring pilot cycles.
 - Aggregate cohort-level metrics (uptime/fairness/quality/communication).

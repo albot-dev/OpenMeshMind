@@ -2,6 +2,31 @@
 
 All notable changes to OpenMeshMind are documented here.
 
+## 2026-02-14
+
+### Added
+
+- Added local generalist runtime MVP with:
+  - lightweight intent router
+  - local corpus retrieval
+  - calculator tool execution
+  - short-term conversational memory
+  - `scripts/local_generalist_runtime.py`
+- Added generality evaluation and validation gates:
+  - `scripts/evaluate_generality.py`
+  - `scripts/check_generality.py`
+  - `docs/MVP_CRITERIA.md`
+- Added unit tests for the runtime and evaluator:
+  - `tests/test_local_generalist_runtime.py`
+  - `tests/test_evaluate_generality.py`
+- Extended validator test coverage for generality metrics in `tests/test_validation_scripts.py`.
+- Integrated generality evaluation into low-end smoke path (`scripts/smoke_check.py`).
+- Included `generality_metrics.json` in weekly report artifact expectations and summary generation (`scripts/generate_weekly_report.py`).
+- Updated project docs to include MVP gate usage and threshold references:
+  - `README.md`
+  - `CONTRIBUTING.md`
+  - `ROADMAP.md`
+
 ## 2026-02-13
 
 ### Added

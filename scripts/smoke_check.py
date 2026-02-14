@@ -136,6 +136,27 @@ def main() -> int:
                 "reduced",
             ],
         ),
+        (
+            "generality_eval_run",
+            [
+                sys.executable,
+                "scripts/evaluate_generality.py",
+                "--skip-distributed-reference",
+                "--quiet",
+                "--json-out",
+                "generality_metrics.json",
+            ],
+        ),
+        (
+            "generality_eval_check",
+            [
+                sys.executable,
+                "scripts/check_generality.py",
+                "generality_metrics.json",
+                "--expected-schema-version",
+                "1",
+            ],
+        ),
     ]
 
     if args.include_fairness:
@@ -187,6 +208,26 @@ def main() -> int:
                         sys.executable,
                         "scripts/check_utility_fairness.py",
                         "utility_fairness_metrics.json",
+                        "--expected-schema-version",
+                        "1",
+                    ],
+                ),
+                (
+                    "generality_eval_full_run",
+                    [
+                        sys.executable,
+                        "scripts/evaluate_generality.py",
+                        "--quiet",
+                        "--json-out",
+                        "generality_metrics.json",
+                    ],
+                ),
+                (
+                    "generality_eval_full_check",
+                    [
+                        sys.executable,
+                        "scripts/check_generality.py",
+                        "generality_metrics.json",
                         "--expected-schema-version",
                         "1",
                     ],

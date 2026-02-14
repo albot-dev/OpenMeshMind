@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACTS = [
     "baseline_metrics.json",
     "classification_metrics.json",
+    "generality_metrics.json",
     "benchmark_metrics.json",
     "fairness_metrics.json",
     "utility_fedavg_metrics.json",
@@ -197,6 +198,35 @@ def communication_summary(
     return lines
 
 
+def generality_summary(generality: dict[str, object] | None) -> list[str]:
+    if not generality:
+        return ["generality_metrics.json not found."]
+
+    tasks = generality.get("tasks", {})
+    aggregate = generality.get("aggregate", {})
+    lines = []
+    cls = tasks.get("classification", {}).get("metrics", {})
+    ret = tasks.get("retrieval", {}).get("metrics", {})
+    ins = tasks.get("instruction_following", {}).get("metrics", {})
+    tool = tasks.get("tool_use", {}).get("metrics", {})
+    lines.append(
+        "generality core:"
+        f" cls_acc={cls.get('accuracy')},"
+        f" ret_r@1={ret.get('recall_at_1')},"
+        f" instruction_pass={ins.get('pass_rate')},"
+        f" tool_pass={tool.get('pass_rate')}"
+    )
+    lines.append(f"generality overall score={aggregate.get('overall_score')}")
+    dist = tasks.get("distributed_reference", {}).get("metrics", {})
+    if dist:
+        lines.append(
+            "distributed reference:"
+            f" int8_drop={dist.get('int8_accuracy_drop')},"
+            f" int8_comm_savings={dist.get('int8_comm_savings_percent')}"
+        )
+    return lines
+
+
 def build_report(
     repo: str,
     gh_status: dict[str, object],
@@ -209,6 +239,7 @@ def build_report(
     utility = load_json(ROOT / "utility_fedavg_metrics.json")
     utility_fairness = load_json(ROOT / "utility_fairness_metrics.json")
     smoke = load_json(ROOT / "smoke_summary.json")
+    generality = load_json(ROOT / "generality_metrics.json")
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines: list[str] = []
@@ -252,6 +283,8 @@ def build_report(
             f"- local classification accuracy={classification['metrics'].get('accuracy')}, "
             f"macro_f1={classification['metrics'].get('macro_f1')}"
         )
+    for item in generality_summary(generality):
+        lines.append(f"- {item}")
     lines.append("")
     lines.append("### Accessibility")
     for item in accessibility_summary(benchmark, smoke):

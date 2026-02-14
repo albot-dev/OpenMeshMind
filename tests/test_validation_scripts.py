@@ -11,6 +11,7 @@ from scripts import check_benchmarks
 from scripts import check_classification
 from scripts import check_cohort_manifest
 from scripts import check_fairness
+from scripts import check_generality
 from scripts import check_pilot_cohort
 from scripts import check_pilot_metrics
 from scripts import check_utility_fairness
@@ -205,6 +206,102 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_benchmarks.main,
                 ["check_benchmarks.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_generality_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "generality_ok.json",
+                {
+                    "schema_version": 1,
+                    "tasks": {
+                        "classification": {
+                            "metrics": {
+                                "accuracy": 0.90,
+                                "macro_f1": 0.88,
+                            }
+                        },
+                        "retrieval": {
+                            "metrics": {
+                                "recall_at_1": 0.82,
+                                "mrr": 0.86,
+                            }
+                        },
+                        "instruction_following": {
+                            "metrics": {
+                                "pass_rate": 0.90,
+                            }
+                        },
+                        "tool_use": {
+                            "metrics": {
+                                "pass_rate": 1.00,
+                            }
+                        },
+                        "distributed_reference": {
+                            "metrics": {
+                                "int8_accuracy_drop": 0.03,
+                                "int8_comm_savings_percent": 70.0,
+                            }
+                        },
+                    },
+                    "aggregate": {"overall_score": 0.86},
+                    "resources": {"total_wall_clock_sec": 9.2},
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "generality_bad.json",
+                {
+                    "schema_version": 1,
+                    "tasks": {
+                        "classification": {
+                            "metrics": {
+                                "accuracy": 0.70,
+                                "macro_f1": 0.65,
+                            }
+                        },
+                        "retrieval": {
+                            "metrics": {
+                                "recall_at_1": 0.40,
+                                "mrr": 0.55,
+                            }
+                        },
+                        "instruction_following": {
+                            "metrics": {
+                                "pass_rate": 0.50,
+                            }
+                        },
+                        "tool_use": {
+                            "metrics": {
+                                "pass_rate": 0.40,
+                            }
+                        },
+                        "distributed_reference": {
+                            "metrics": {
+                                "int8_accuracy_drop": 0.20,
+                                "int8_comm_savings_percent": 20.0,
+                            }
+                        },
+                    },
+                    "aggregate": {"overall_score": 0.42},
+                    "resources": {"total_wall_clock_sec": 420.0},
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_generality.main,
+                ["check_generality.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_generality.main,
+                ["check_generality.py", str(invalid)],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)
