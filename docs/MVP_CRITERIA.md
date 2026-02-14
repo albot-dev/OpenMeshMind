@@ -20,6 +20,7 @@ A build is considered MVP-ready when it can pass the following task families loc
 3. Instruction following (action compliance)
 4. Tool use (calculator correctness)
 5. Centralized vs federated distributed reference comparison
+6. Adapter-style federated proxy check (low-rank intent adapter)
 
 ## Required thresholds
 
@@ -52,6 +53,8 @@ Full gate with distributed reference:
 ```bash
 python3 scripts/evaluate_generality.py --json-out generality_metrics.json
 python3 scripts/check_generality.py generality_metrics.json
+python3 experiments/fedavg_adapter_intent.py --json-out adapter_intent_metrics.json
+python3 scripts/check_adapter_intent.py adapter_intent_metrics.json
 ```
 
 Full smoke path (includes generality checks):

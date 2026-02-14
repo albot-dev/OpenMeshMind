@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from scripts import check_baseline
+from scripts import check_adapter_intent
 from scripts import check_benchmarks
 from scripts import check_classification
 from scripts import check_cohort_manifest
@@ -206,6 +207,50 @@ class ValidationScriptTests(unittest.TestCase):
             code_bad, out_bad = self._run_main(
                 check_benchmarks.main,
                 ["check_benchmarks.py", str(invalid)],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
+
+    def test_check_adapter_intent_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            valid = self._write_json(
+                tmp,
+                "adapter_ok.json",
+                {
+                    "schema_version": 1,
+                    "methods": {
+                        "centralized": {"accuracy_mean": 0.88},
+                        "fedavg_int8": {"accuracy_mean": 0.84},
+                    },
+                    "quality_drop_vs_centralized": {"int8_accuracy_drop": 0.04},
+                    "communication_savings_percent": {"int8_vs_fp32_percent": 72.0},
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "adapter_bad.json",
+                {
+                    "schema_version": 1,
+                    "methods": {
+                        "centralized": {"accuracy_mean": 0.60},
+                        "fedavg_int8": {"accuracy_mean": 0.40},
+                    },
+                    "quality_drop_vs_centralized": {"int8_accuracy_drop": 0.20},
+                    "communication_savings_percent": {"int8_vs_fp32_percent": 10.0},
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_adapter_intent.main,
+                ["check_adapter_intent.py", str(valid)],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_adapter_intent.main,
+                ["check_adapter_intent.py", str(invalid)],
             )
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)

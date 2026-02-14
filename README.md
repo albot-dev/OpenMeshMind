@@ -86,6 +86,13 @@ python3 experiments/fedavg_classification_utility.py --json-out utility_fedavg_m
 
 Sample federated utility summary: `reports/fedavg_classification_utility.md`.
 
+Run federated adapter-style intent training (low-rank adapter proxy):
+
+```bash
+python3 experiments/fedavg_adapter_intent.py --json-out adapter_intent_metrics.json
+python3 scripts/check_adapter_intent.py adapter_intent_metrics.json
+```
+
 Run utility fairness stress checks (capacity + churn):
 
 ```bash

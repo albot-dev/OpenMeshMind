@@ -113,6 +113,36 @@ def main() -> int:
             ],
         ),
         (
+            "adapter_intent_run",
+            [
+                sys.executable,
+                "experiments/fedavg_adapter_intent.py",
+                "--seeds",
+                "7",
+                "--samples-per-intent",
+                "12",
+                "--rounds",
+                "20",
+                "--local-steps",
+                "10",
+                "--learning-rate",
+                "0.3",
+                "--quiet",
+                "--json-out",
+                "adapter_intent_metrics.json",
+            ],
+        ),
+        (
+            "adapter_intent_check",
+            [
+                sys.executable,
+                "scripts/check_adapter_intent.py",
+                "adapter_intent_metrics.json",
+                "--expected-schema-version",
+                "1",
+            ],
+        ),
+        (
             "benchmark_reduced_run",
             [
                 sys.executable,

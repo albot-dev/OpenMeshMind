@@ -12,11 +12,15 @@ All notable changes to OpenMeshMind are documented here.
   - calculator tool execution
   - short-term conversational memory
   - `scripts/local_generalist_runtime.py`
+- Added federated adapter-style intent experiment (low-rank adapter proxy):
+  - `experiments/fedavg_adapter_intent.py`
+  - `scripts/check_adapter_intent.py`
 - Added generality evaluation and validation gates:
   - `scripts/evaluate_generality.py`
   - `scripts/check_generality.py`
   - `docs/MVP_CRITERIA.md`
 - Added unit tests for the runtime and evaluator:
+  - `tests/test_fedavg_adapter_intent.py`
   - `tests/test_local_generalist_runtime.py`
   - `tests/test_evaluate_generality.py`
 - Extended validator test coverage for generality metrics in `tests/test_validation_scripts.py`.

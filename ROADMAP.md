@@ -33,6 +33,7 @@
   - retrieval against local corpus
   - deterministic tool execution
   - short-term conversational memory
+- Add adapter-style federated training proxy with communication-efficient updates.
 - Enforce generality gate with explicit thresholds:
   - classification
   - retrieval

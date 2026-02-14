@@ -20,6 +20,7 @@ DEFAULT_ARTIFACTS = [
     "baseline_metrics.json",
     "classification_metrics.json",
     "generality_metrics.json",
+    "adapter_intent_metrics.json",
     "benchmark_metrics.json",
     "fairness_metrics.json",
     "utility_fedavg_metrics.json",
@@ -122,6 +123,20 @@ def quality_summary(utility: dict[str, object] | None) -> list[str]:
         f"fedavg_fp32 accuracy={fp32.get('accuracy_mean')}",
         f"fedavg_int8 accuracy={int8.get('accuracy_mean')}",
         f"fedavg_sparse accuracy={sparse.get('accuracy_mean')}",
+    ]
+
+
+def adapter_summary(adapter: dict[str, object] | None) -> list[str]:
+    if not adapter:
+        return ["adapter_intent_metrics.json not found."]
+    methods = adapter.get("methods", {})
+    central = methods.get("centralized", {})
+    int8 = methods.get("fedavg_int8", {})
+    savings = adapter.get("communication_savings_percent", {})
+    return [
+        f"adapter centralized accuracy={central.get('accuracy_mean')}",
+        f"adapter fedavg_int8 accuracy={int8.get('accuracy_mean')}",
+        f"adapter int8 savings vs fp32={savings.get('int8_vs_fp32_percent')}",
     ]
 
 
@@ -237,6 +252,7 @@ def build_report(
     benchmark = load_json(ROOT / "benchmark_metrics.json")
     fairness = load_json(ROOT / "fairness_metrics.json")
     utility = load_json(ROOT / "utility_fedavg_metrics.json")
+    adapter = load_json(ROOT / "adapter_intent_metrics.json")
     utility_fairness = load_json(ROOT / "utility_fairness_metrics.json")
     smoke = load_json(ROOT / "smoke_summary.json")
     generality = load_json(ROOT / "generality_metrics.json")
@@ -277,6 +293,8 @@ def build_report(
     lines.append("")
     lines.append("### Quality")
     for item in quality_summary(utility):
+        lines.append(f"- {item}")
+    for item in adapter_summary(adapter):
         lines.append(f"- {item}")
     if classification:
         lines.append(

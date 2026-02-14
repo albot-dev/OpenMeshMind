@@ -30,6 +30,8 @@ python3 scripts/check_classification.py classification_metrics.json
 python3 experiments/fedavg_classification_utility.py --json-out utility_fedavg_metrics.json
 python3 experiments/fedavg_classification_utility.py --simulate-client-capacity --dropout-rate 0.1 --round-deadline-sweep 4.0,4.2 --quiet --json-out utility_fairness_metrics.json
 python3 scripts/check_utility_fairness.py utility_fairness_metrics.json
+python3 experiments/fedavg_adapter_intent.py --json-out adapter_intent_metrics.json
+python3 scripts/check_adapter_intent.py adapter_intent_metrics.json
 python3 scripts/evaluate_generality.py --json-out generality_metrics.json
 python3 scripts/check_generality.py generality_metrics.json
 ```
