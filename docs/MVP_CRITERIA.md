@@ -38,6 +38,8 @@ These are the default gates implemented in `scripts/check_generality.py`.
 | Runtime envelope | total eval wall clock | `<= 180s` |
 | Distributed reference | int8 accuracy drop vs centralized | `<= 0.10` |
 | Distributed reference | int8 communication savings vs fp32 | `>= 40%` |
+| Adapter reference | int8 accuracy drop vs centralized | `<= 0.25` |
+| Adapter reference | int8 communication savings vs fp32 | `>= 40%` |
 
 ## How to run
 

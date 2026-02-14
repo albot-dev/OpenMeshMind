@@ -293,6 +293,12 @@ class ValidationScriptTests(unittest.TestCase):
                                 "int8_comm_savings_percent": 70.0,
                             }
                         },
+                        "adapter_reference": {
+                            "metrics": {
+                                "int8_accuracy_drop": 0.10,
+                                "int8_comm_savings_percent": 65.0,
+                            }
+                        },
                     },
                     "aggregate": {"overall_score": 0.86},
                     "resources": {"total_wall_clock_sec": 9.2},
@@ -330,6 +336,12 @@ class ValidationScriptTests(unittest.TestCase):
                             "metrics": {
                                 "int8_accuracy_drop": 0.20,
                                 "int8_comm_savings_percent": 20.0,
+                            }
+                        },
+                        "adapter_reference": {
+                            "metrics": {
+                                "int8_accuracy_drop": 0.50,
+                                "int8_comm_savings_percent": 10.0,
                             }
                         },
                     },

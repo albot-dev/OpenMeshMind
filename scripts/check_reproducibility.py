@@ -27,6 +27,8 @@ def main() -> int:
     parser.add_argument("--min-tool-pass-rate-mean", type=float, default=0.80)
     parser.add_argument("--max-int8-accuracy-drop-mean", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-mean", type=float, default=40.0)
+    parser.add_argument("--max-adapter-int8-accuracy-drop-mean", type=float, default=0.25)
+    parser.add_argument("--min-adapter-int8-comm-savings-mean", type=float, default=40.0)
     args = parser.parse_args()
 
     with open(args.metrics_json, "r", encoding="utf-8") as f:
@@ -91,6 +93,19 @@ def main() -> int:
                 "int8_comm_savings mean "
                 f"{int8_savings_mean:.2f}% < {args.min_int8_comm_savings_mean:.2f}%"
             )
+    if "adapter_int8_accuracy_drop" in summary:
+        adapter_drop_mean = float(summary["adapter_int8_accuracy_drop"].get("mean", 0.0))
+        adapter_savings_mean = float(summary["adapter_int8_comm_savings_percent"].get("mean", 0.0))
+        if adapter_drop_mean > args.max_adapter_int8_accuracy_drop_mean:
+            failures.append(
+                "adapter_int8_accuracy_drop mean "
+                f"{adapter_drop_mean:.4f} > {args.max_adapter_int8_accuracy_drop_mean:.4f}"
+            )
+        if adapter_savings_mean < args.min_adapter_int8_comm_savings_mean:
+            failures.append(
+                "adapter_int8_comm_savings mean "
+                f"{adapter_savings_mean:.2f}% < {args.min_adapter_int8_comm_savings_mean:.2f}%"
+            )
 
     print("Reproducibility metrics summary")
     print(f"- schema_version: {report.get('schema_version')}")
@@ -103,6 +118,12 @@ def main() -> int:
     if "int8_accuracy_drop" in summary:
         print(f"- int8 drop mean: {summary['int8_accuracy_drop'].get('mean'):.4f}")
         print(f"- int8 comm savings mean: {summary['int8_comm_savings_percent'].get('mean'):.2f}%")
+    if "adapter_int8_accuracy_drop" in summary:
+        print(f"- adapter int8 drop mean: {summary['adapter_int8_accuracy_drop'].get('mean'):.4f}")
+        print(
+            "- adapter int8 comm savings mean: "
+            f"{summary['adapter_int8_comm_savings_percent'].get('mean'):.2f}%"
+        )
 
     if failures:
         print("\nValidation failed:")

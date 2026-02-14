@@ -29,6 +29,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from experiments import fedavg_classification_utility as utility_fed
+from experiments import fedavg_adapter_intent as adapter_fed
 from experiments import local_classification_baseline as classification
 from experiments import local_retrieval_baseline as retrieval
 from scripts.local_generalist_runtime import LocalGeneralistRuntime
@@ -254,6 +255,45 @@ def evaluate_distributed_reference(seed: int) -> dict[str, object]:
     }
 
 
+def evaluate_adapter_reference(seed: int) -> dict[str, object]:
+    start = time.perf_counter()
+    report = adapter_fed.run_experiment(
+        seeds=[seed],
+        modes=["fp32", "int8", "sparse"],
+        samples_per_intent=12,
+        n_clients=5,
+        rounds=20,
+        local_steps=10,
+        learning_rate=0.3,
+        sparse_ratio=0.2,
+        rank=4,
+        non_iid_severity=1.2,
+    )
+    runtime_sec = time.perf_counter() - start
+    methods = report["methods"]
+    quality_drop = report["quality_drop_vs_centralized"]
+    comm = report["communication_savings_percent"]
+    central = methods["centralized"]
+    int8 = methods["fedavg_int8"]
+    sparse = methods["fedavg_sparse"]
+
+    return {
+        "runtime_sec": runtime_sec,
+        "metrics": {
+            "centralized_accuracy": central["accuracy_mean"],
+            "int8_accuracy": int8["accuracy_mean"],
+            "sparse_accuracy": sparse["accuracy_mean"],
+            "int8_accuracy_drop": quality_drop["int8_accuracy_drop"],
+            "sparse_accuracy_drop": quality_drop["sparse_accuracy_drop"],
+            "int8_comm_savings_percent": comm.get("int8_vs_fp32_percent", 0.0),
+            "sparse_comm_savings_percent": comm.get("sparse_vs_fp32_percent", 0.0),
+        },
+        "score": max(0.0, 1.0 - max(0.0, quality_drop["int8_accuracy_drop"])) * (
+            comm.get("int8_vs_fp32_percent", 0.0) / 100.0
+        ),
+    }
+
+
 def build_aggregate(tasks: dict[str, dict[str, object]]) -> dict[str, object]:
     task_scores = [float(payload["score"]) for payload in tasks.values()]
     runtime_total = sum(float(payload["runtime_sec"]) for payload in tasks.values())
@@ -289,6 +329,13 @@ def summarize(report: dict[str, object]) -> None:
             f"int8_drop={dist['int8_accuracy_drop']:+.4f}, "
             f"int8_comm_save={dist['int8_comm_savings_percent']:.2f}%"
         )
+    if "adapter_reference" in report["tasks"]:
+        adapter = report["tasks"]["adapter_reference"]["metrics"]
+        print(
+            "adapter: "
+            f"int8_drop={adapter['int8_accuracy_drop']:+.4f}, "
+            f"int8_comm_save={adapter['int8_comm_savings_percent']:.2f}%"
+        )
 
     print(
         "aggregate: "
@@ -321,6 +368,11 @@ def main() -> int:
         help="Skip centralized vs federated comparison task.",
     )
     parser.add_argument(
+        "--skip-adapter-reference",
+        action="store_true",
+        help="Skip adapter-style federated reference task.",
+    )
+    parser.add_argument(
         "--json-out",
         default="",
         help="Optional output JSON path.",
@@ -342,6 +394,8 @@ def main() -> int:
     }
     if not args.skip_distributed_reference:
         tasks["distributed_reference"] = evaluate_distributed_reference(seed=args.seed)
+    if not args.skip_adapter_reference:
+        tasks["adapter_reference"] = evaluate_adapter_reference(seed=args.seed)
 
     report = {
         "schema_version": 1,
@@ -350,6 +404,7 @@ def main() -> int:
             "seed": args.seed,
             "top_k": args.top_k,
             "include_distributed_reference": not args.skip_distributed_reference,
+            "include_adapter_reference": not args.skip_adapter_reference,
         },
         "tasks": tasks,
         "aggregate": build_aggregate(tasks=tasks),

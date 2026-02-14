@@ -69,6 +69,11 @@ def run_seed(seed: int, top_k: int, include_distributed_reference: bool) -> dict
         d = distributed["metrics"]
         run["int8_accuracy_drop"] = float(d["int8_accuracy_drop"])
         run["int8_comm_savings_percent"] = float(d["int8_comm_savings_percent"])
+    adapter = tasks.get("adapter_reference")
+    if adapter:
+        a = adapter["metrics"]
+        run["adapter_int8_accuracy_drop"] = float(a["int8_accuracy_drop"])
+        run["adapter_int8_comm_savings_percent"] = float(a["int8_comm_savings_percent"])
     return run
 
 
@@ -101,6 +106,13 @@ def summarize_runs(runs: list[dict[str, float]]) -> dict[str, object]:
         summary["int8_comm_savings_percent"] = summarize_metric(
             [float(run["int8_comm_savings_percent"]) for run in runs]
         )
+    if runs and "adapter_int8_accuracy_drop" in runs[0]:
+        summary["adapter_int8_accuracy_drop"] = summarize_metric(
+            [float(run["adapter_int8_accuracy_drop"]) for run in runs]
+        )
+        summary["adapter_int8_comm_savings_percent"] = summarize_metric(
+            [float(run["adapter_int8_comm_savings_percent"]) for run in runs]
+        )
     return summary
 
 
@@ -128,6 +140,12 @@ def print_summary(report: dict[str, object]) -> None:
             "distributed int8:"
             f" drop_mean={summary['int8_accuracy_drop']['mean']:.4f},"
             f" comm_savings_mean={summary['int8_comm_savings_percent']['mean']:.2f}%"
+        )
+    if "adapter_int8_accuracy_drop" in summary:
+        print(
+            "adapter int8:"
+            f" drop_mean={summary['adapter_int8_accuracy_drop']['mean']:.4f},"
+            f" comm_savings_mean={summary['adapter_int8_comm_savings_percent']['mean']:.2f}%"
         )
 
 

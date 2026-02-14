@@ -156,6 +156,8 @@ python3 scripts/reproducibility_sweep.py --seeds 7,17,27 --json-out reproducibil
 python3 scripts/check_reproducibility.py reproducibility_metrics.json
 ```
 
+The generality and reproducibility gates include both distributed FedAvg reference and adapter-reference communication/quality checks.
+
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
 
 Release process and tagging workflow: `RELEASE.md`.

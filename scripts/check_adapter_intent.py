@@ -27,8 +27,8 @@ def main() -> int:
     parser.add_argument(
         "--max-int8-accuracy-drop",
         type=float,
-        default=0.70,
-        help="Maximum int8 accuracy drop vs centralized (default: 0.70).",
+        default=0.25,
+        help="Maximum int8 accuracy drop vs centralized (default: 0.25).",
     )
     parser.add_argument(
         "--min-int8-comm-savings",

@@ -15,6 +15,8 @@ All notable changes to OpenMeshMind are documented here.
 - Added federated adapter-style intent experiment (low-rank adapter proxy):
   - `experiments/fedavg_adapter_intent.py`
   - `scripts/check_adapter_intent.py`
+- Improved adapter int8 quality via segmented quantization across parameter sections.
+- Added adapter reference metrics to the generality and reproducibility gate pipelines.
 - Added generality evaluation and validation gates:
   - `scripts/evaluate_generality.py`
   - `scripts/check_generality.py`

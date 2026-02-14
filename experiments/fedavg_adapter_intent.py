@@ -110,10 +110,33 @@ def sparse_topk(vec: list[float], keep_ratio: float) -> tuple[list[float], int]:
     return dense, k * 8 + 4
 
 
-def compress_delta(delta: list[float], mode: str, sparse_ratio: float) -> tuple[list[float], int]:
+def quantize_int8_segmented(delta: list[float], section_sizes: list[int]) -> tuple[list[float], int]:
+    if not section_sizes or sum(section_sizes) != len(delta):
+        raise ValueError("section_sizes must be non-empty and sum to delta length.")
+    restored: list[float] = []
+    total_bytes = 0
+    offset = 0
+    for size in section_sizes:
+        segment = delta[offset : offset + size]
+        q, scale = fed.quantize_int8(segment)
+        restored.extend(fed.dequantize_int8(q, scale))
+        # payload bytes + float32 scale metadata
+        total_bytes += len(q) + 4
+        offset += size
+    return restored, total_bytes
+
+
+def compress_delta(
+    delta: list[float],
+    mode: str,
+    sparse_ratio: float,
+    int8_section_sizes: list[int] | None = None,
+) -> tuple[list[float], int]:
     if mode == "fp32":
         return delta, len(delta) * 4
     if mode == "int8":
+        if int8_section_sizes:
+            return quantize_int8_segmented(delta=delta, section_sizes=int8_section_sizes)
         q, scale = fed.quantize_int8(delta)
         restored = fed.dequantize_int8(q, scale)
         return restored, len(q) + 4
@@ -353,6 +376,11 @@ def run_fedavg(
         rank=rank,
         seed=seed,
     )
+    int8_section_sizes = [
+        n_classes * rank,
+        rank * n_features,
+        n_classes,
+    ]
     total_uplink = 0
     t0 = time.perf_counter()
 
@@ -381,7 +409,12 @@ def run_fedavg(
 
             local_vec = flatten_params(local_a, local_b, local_bias)
             delta = [lv - gv for lv, gv in zip(local_vec, base_vec)]
-            restored, bytes_sent = compress_delta(delta=delta, mode=mode, sparse_ratio=sparse_ratio)
+            restored, bytes_sent = compress_delta(
+                delta=delta,
+                mode=mode,
+                sparse_ratio=sparse_ratio,
+                int8_section_sizes=int8_section_sizes,
+            )
             total_uplink += bytes_sent
 
             weight = len(client_x) / total_examples
@@ -494,7 +527,8 @@ def run_once(
         test_y=test_y,
         base_w=base_w,
         rank=rank,
-        steps=rounds * local_steps * max(1, n_clients // 2),
+        # Match centralized update budget to total federated local step budget.
+        steps=rounds * local_steps * n_clients,
         learning_rate=learning_rate,
         seed=seed,
     )
@@ -608,9 +642,9 @@ def main() -> None:
         help="Synthetic samples per intent label.",
     )
     parser.add_argument("--n-clients", type=int, default=5)
-    parser.add_argument("--rounds", type=int, default=10)
-    parser.add_argument("--local-steps", type=int, default=6)
-    parser.add_argument("--learning-rate", type=float, default=0.16)
+    parser.add_argument("--rounds", type=int, default=20)
+    parser.add_argument("--local-steps", type=int, default=10)
+    parser.add_argument("--learning-rate", type=float, default=0.3)
     parser.add_argument("--sparse-ratio", type=float, default=0.2)
     parser.add_argument("--rank", type=int, default=4, help="Adapter rank.")
     parser.add_argument("--non-iid-severity", type=float, default=1.2)

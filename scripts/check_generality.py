@@ -28,6 +28,8 @@ def main() -> int:
     parser.add_argument("--max-total-runtime-sec", type=float, default=180.0)
     parser.add_argument("--max-int8-accuracy-drop", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-percent", type=float, default=40.0)
+    parser.add_argument("--max-adapter-int8-accuracy-drop", type=float, default=0.25)
+    parser.add_argument("--min-adapter-int8-comm-savings-percent", type=float, default=40.0)
     args = parser.parse_args()
 
     with open(args.metrics_json, "r", encoding="utf-8") as f:
@@ -102,6 +104,22 @@ def main() -> int:
                 f"{int8_comm:.2f}% < {args.min_int8_comm_savings_percent:.2f}%"
             )
 
+    adapter = tasks.get("adapter_reference")
+    if adapter is not None:
+        adapter_metrics = adapter.get("metrics", {})
+        adapter_drop = float(adapter_metrics.get("int8_accuracy_drop", 0.0))
+        adapter_comm = float(adapter_metrics.get("int8_comm_savings_percent", 0.0))
+        if adapter_drop > args.max_adapter_int8_accuracy_drop:
+            failures.append(
+                "adapter int8_accuracy_drop "
+                f"{adapter_drop:.4f} > {args.max_adapter_int8_accuracy_drop:.4f}"
+            )
+        if adapter_comm < args.min_adapter_int8_comm_savings_percent:
+            failures.append(
+                "adapter int8_comm_savings_percent "
+                f"{adapter_comm:.2f}% < {args.min_adapter_int8_comm_savings_percent:.2f}%"
+            )
+
     print("Generality metrics summary")
     print(f"- schema_version: {report.get('schema_version')}")
     print(f"- classification accuracy: {cls['accuracy']:.4f}")
@@ -116,6 +134,10 @@ def main() -> int:
         dist = distributed["metrics"]
         print(f"- int8 accuracy drop vs centralized: {dist['int8_accuracy_drop']:+.4f}")
         print(f"- int8 communication savings vs fp32: {dist['int8_comm_savings_percent']:.2f}%")
+    if adapter is not None:
+        adapter_metrics = adapter["metrics"]
+        print(f"- adapter int8 accuracy drop vs centralized: {adapter_metrics['int8_accuracy_drop']:+.4f}")
+        print(f"- adapter int8 communication savings vs fp32: {adapter_metrics['int8_comm_savings_percent']:.2f}%")
 
     if failures:
         print("\nValidation failed:")
