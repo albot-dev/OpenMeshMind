@@ -1,0 +1,11 @@
+{
+  "cohort_id": "pilot-cohort-2026w08",
+  "failed_count": 0,
+  "failure_rate": 0.0,
+  "generated_utc": "2026-02-15T20:07:23.868268+00:00",
+  "node_count": 6,
+  "passed_count": 6,
+  "pending_count": 0,
+  "schema_version": 1,
+  "startup_rate": 1.0
+}

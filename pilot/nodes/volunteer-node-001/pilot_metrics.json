@@ -1,0 +1,46 @@
+{
+  "accessibility": {
+    "benchmark_total_runtime_sec": 2.129361833038274,
+    "max_peak_heap_bytes": 3634668,
+    "max_peak_rss_bytes": 27049984
+  },
+  "communication": {
+    "baseline_int8_reduction_percent": 69.73684210526316,
+    "utility_int8_savings_percent": 74.8046875
+  },
+  "decentralization": {
+    "baseline_int8_jain_index": 0.9836764543547851,
+    "utility_int8_jain_gain": 0.2623989973476656
+  },
+  "health": {
+    "cycle_duration_sec": 4.883,
+    "last_cycle_ok": true,
+    "step_count": 1,
+    "uptime_ratio_24h": 1.0
+  },
+  "node": {
+    "mode": "reduced",
+    "node_id": "volunteer-node-001",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "python_version": "3.10.10"
+  },
+  "provenance": {
+    "commit": "4e62c86f4a484ad2e328f84d30bc15283e7c01b7",
+    "decision_log": "DECISION_LOG.md",
+    "provenance_template": "PROVENANCE_TEMPLATE.md",
+    "repo": "albot-dev/OpenMeshMind"
+  },
+  "quality": {
+    "classification_accuracy": 1.0,
+    "classification_macro_f1": 1.0,
+    "utility_fedavg_int8_accuracy": 1.0,
+    "utility_fedavg_int8_macro_f1": 1.0
+  },
+  "schema_version": 1,
+  "status": {
+    "collected": true,
+    "open_issues": 2,
+    "open_milestones": 1
+  },
+  "timestamp_utc": "2026-02-13T22:21:07.766890+00:00"
+}

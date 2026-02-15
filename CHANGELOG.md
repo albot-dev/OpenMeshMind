@@ -16,6 +16,18 @@ All notable changes to OpenMeshMind are documented here.
   - CI pipeline (`.github/workflows/cpu-baseline.yml`)
   - weekly reporting bundle/summary (`scripts/generate_weekly_report.py`)
 - Added unit tests for main-track status behavior: `tests/test_main_track_status.py`.
+- Promoted pilot rehearsal artifacts to a 6-node single-operator multi-machine cohort:
+  - updated `pilot/cohort_manifest.json` with passed onboarding entries
+  - `pilot/cohort_onboarding_summary.json`
+  - `pilot/pilot_cohort_metrics.json`
+  - `pilot/nodes/*/pilot_metrics.json`
+- Added day-level cohort artifacts for a 14-day pilot window:
+  - `pilot/runs/day01/pilot_cohort_metrics.json` ... `pilot/runs/day14/pilot_cohort_metrics.json`
+- Published updated pilot reports and bundles:
+  - `reports/pilot_status.md`
+  - `reports/pilot_artifacts.tgz`
+  - `reports/pilot_14_day_report.md`
+  - `reports/pilot_14_day_artifacts.tgz`
 
 ## 2026-02-14
 

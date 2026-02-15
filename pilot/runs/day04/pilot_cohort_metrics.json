@@ -1,0 +1,191 @@
+{
+  "cohort": {
+    "node_count": 6,
+    "node_ids": [
+      "volunteer-node-001",
+      "volunteer-node-local-smoke6",
+      "volunteer-node-local-smoke3",
+      "volunteer-node-local-smoke4",
+      "volunteer-node-local-smoke5",
+      "volunteer-node-local-smoke2"
+    ],
+    "sources": [
+      "pilot/nodes/volunteer-node-001/pilot_metrics.json",
+      "pilot/nodes/volunteer-node-local-smoke6/pilot_metrics.json",
+      "pilot/nodes/volunteer-node-local-smoke3/pilot_metrics.json",
+      "pilot/nodes/volunteer-node-local-smoke4/pilot_metrics.json",
+      "pilot/nodes/volunteer-node-local-smoke5/pilot_metrics.json",
+      "pilot/nodes/volunteer-node-local-smoke2/pilot_metrics.json"
+    ]
+  },
+  "nodes": [
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.129361833038274,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634668,
+      "max_peak_rss_bytes": 27049984,
+      "mode": "reduced",
+      "node_id": "volunteer-node-001",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-001/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    },
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.1937854169518687,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634844,
+      "max_peak_rss_bytes": 27361280,
+      "mode": "reduced",
+      "node_id": "volunteer-node-local-smoke6",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-local-smoke6/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    },
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.2336298750014976,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634474,
+      "max_peak_rss_bytes": 27066368,
+      "mode": "reduced",
+      "node_id": "volunteer-node-local-smoke3",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-local-smoke3/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    },
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.412182666012086,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634235,
+      "max_peak_rss_bytes": 26624000,
+      "mode": "reduced",
+      "node_id": "volunteer-node-local-smoke4",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-local-smoke4/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    },
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.1344147920026444,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634659,
+      "max_peak_rss_bytes": 27983872,
+      "mode": "reduced",
+      "node_id": "volunteer-node-local-smoke5",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-local-smoke5/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    },
+    {
+      "baseline_int8_jain_index": 0.9836764543547851,
+      "baseline_int8_reduction_percent": 69.73684210526316,
+      "benchmark_total_runtime_sec": 2.2382182919536717,
+      "classification_accuracy": 1.0,
+      "classification_macro_f1": 1.0,
+      "last_cycle_ok": true,
+      "max_peak_heap_bytes": 3634606,
+      "max_peak_rss_bytes": 26951680,
+      "mode": "reduced",
+      "node_id": "volunteer-node-local-smoke2",
+      "open_issues": 2,
+      "open_milestones": 1,
+      "source": "pilot/nodes/volunteer-node-local-smoke2/pilot_metrics.json",
+      "status_collected": true,
+      "uptime_ratio_24h": 1.0,
+      "utility_fedavg_int8_accuracy": 1.0,
+      "utility_fedavg_int8_macro_f1": 1.0,
+      "utility_int8_jain_gain": 0.2623989973476656,
+      "utility_int8_savings_percent": 74.8046875
+    }
+  ],
+  "provenance": {
+    "commit": "bc024595c94bad14ca94cb60efa8b082c895c975",
+    "generated_for_day": 4,
+    "repo": "albot-dev/OpenMeshMind",
+    "source_count": 6
+  },
+  "schema_version": 1,
+  "summary": {
+    "accessibility": {
+      "benchmark_total_runtime_sec_mean": 2.2235988124933406,
+      "max_peak_heap_bytes_max": 3634844,
+      "max_peak_rss_bytes_max": 27983872
+    },
+    "communication": {
+      "baseline_int8_reduction_percent_mean": 69.73684210526316,
+      "utility_int8_savings_percent_mean": 74.8046875
+    },
+    "decentralization": {
+      "baseline_int8_jain_index_mean": 0.983676454354785,
+      "utility_int8_jain_gain_max": 0.2623989973476656,
+      "utility_int8_jain_gain_mean": 0.26239899734766553,
+      "utility_int8_jain_gain_min": 0.2623989973476656
+    },
+    "health": {
+      "last_cycle_ok_ratio": 1.0,
+      "uptime_ratio_24h_max": 1.0,
+      "uptime_ratio_24h_mean": 1.0,
+      "uptime_ratio_24h_min": 1.0
+    },
+    "quality": {
+      "classification_accuracy_mean": 1.0,
+      "classification_macro_f1_mean": 1.0,
+      "utility_fedavg_int8_accuracy_mean": 1.0,
+      "utility_fedavg_int8_macro_f1_mean": 1.0
+    },
+    "status": {
+      "open_issues_max": 2,
+      "open_milestones_max": 1,
+      "status_collected_ratio": 1.0
+    }
+  },
+  "timestamp_utc": "2026-02-05T20:00:00+00:00"
+}
