@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current execution tracker
+
+- Active goals and sub-goals: `docs/COMING_GOALS.md`
+- Machine-readable status: `main_track_status.json`
+- Human-readable status: `reports/main_track_status.md`
+- Status generator: `scripts/main_track_status.py`
+
 ## Phase 1: Foundation (now)
 
 - Keep all experiments runnable on low-resource machines.

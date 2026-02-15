@@ -166,6 +166,27 @@ The generality and reproducibility gates include both distributed FedAvg referen
 
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
 
+Track current coming goals and sub-goals:
+
+```bash
+python3 scripts/main_track_status.py \
+  --json-out main_track_status.json \
+  --md-out reports/main_track_status.md
+```
+
+Strict full-gate status check (fairness required):
+
+```bash
+python3 scripts/main_track_status.py \
+  --require-fairness \
+  --require-smoke-summary \
+  --fail-on-incomplete \
+  --json-out main_track_status.json \
+  --md-out reports/main_track_status.md
+```
+
+Current goals document: `docs/COMING_GOALS.md`.
+
 Release process and tagging workflow: `RELEASE.md`.
 
 Weekly public status generation (report + artifact bundle):
@@ -256,6 +277,7 @@ Pilot operations references:
 - `CHANGELOG.md`
 - `PROJECTS.md`
 - `docs/MVP_CRITERIA.md`
+- `docs/COMING_GOALS.md`
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
 - `PILOT_GOVERNANCE.md`
@@ -263,7 +285,7 @@ Pilot operations references:
 
 ## Next milestones
 
-See `ROADMAP.md` for phased execution.
+See `ROADMAP.md` for phased execution and `docs/COMING_GOALS.md` for current goal/sub-goal completion tracking.
 
 ## Work tracking
 

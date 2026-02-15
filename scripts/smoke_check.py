@@ -291,6 +291,18 @@ def main() -> int:
             ]
         )
 
+    main_track_cmd = [
+        sys.executable,
+        "scripts/main_track_status.py",
+        "--require-smoke-summary",
+        "--json-out",
+        "main_track_status.json",
+        "--md-out",
+        "reports/main_track_status.md",
+    ]
+    if args.include_fairness:
+        main_track_cmd.extend(["--require-fairness", "--fail-on-incomplete"])
+
     summary: dict[str, object] = {
         "schema_version": 1,
         "include_fairness": args.include_fairness,
@@ -318,6 +330,30 @@ def main() -> int:
             return 1
 
     summary["ok"] = True
+    summary["total_duration_sec"] = time.perf_counter() - total_start
+    if args.json_out:
+        with open(args.json_out, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2, sort_keys=True)
+
+    print(f"[smoke] main_track_status: {' '.join(main_track_cmd)}")
+    ok, duration, output = run_step(name="main_track_status", cmd=main_track_cmd)
+    summary["steps"].append(
+        {
+            "name": "main_track_status",
+            "ok": ok,
+            "duration_sec": duration,
+        }
+    )
+    print(f"[smoke] main_track_status: {'ok' if ok else 'failed'} ({duration:.2f}s)")
+    if not ok:
+        print(output)
+        summary["ok"] = False
+        summary["total_duration_sec"] = time.perf_counter() - total_start
+        if args.json_out:
+            with open(args.json_out, "w", encoding="utf-8") as f:
+                json.dump(summary, f, indent=2, sort_keys=True)
+        return 1
+
     summary["total_duration_sec"] = time.perf_counter() - total_start
     print(f"[smoke] total: {summary['total_duration_sec']:.2f}s")
     if args.json_out:

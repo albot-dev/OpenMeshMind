@@ -2,6 +2,21 @@
 
 All notable changes to OpenMeshMind are documented here.
 
+## 2026-02-15
+
+### Added
+
+- Added explicit coming-goals and sub-goals tracker: `docs/COMING_GOALS.md`.
+- Added machine-readable main-track status generator and markdown renderer:
+  - `scripts/main_track_status.py`
+  - `main_track_status.json`
+  - `reports/main_track_status.md`
+- Integrated main-track status generation into:
+  - smoke path (`scripts/smoke_check.py`)
+  - CI pipeline (`.github/workflows/cpu-baseline.yml`)
+  - weekly reporting bundle/summary (`scripts/generate_weekly_report.py`)
+- Added unit tests for main-track status behavior: `tests/test_main_track_status.py`.
+
 ## 2026-02-14
 
 ### Added

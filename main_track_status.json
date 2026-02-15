@@ -1,0 +1,119 @@
+{
+  "generated_utc": "2026-02-15T13:35:47.279434+00:00",
+  "goals": [
+    {
+      "description": "Keep federated CPU baselines and adapter proxy quality stable with communication savings.",
+      "id": "g1_cpu_federated_foundation",
+      "status": "done",
+      "sub_goals": [
+        {
+          "artifact": "baseline_metrics.json",
+          "detail": "validation passed",
+          "id": "sg1_baseline_gate",
+          "required": true,
+          "status": "done",
+          "title": "Baseline federated gate passes"
+        },
+        {
+          "artifact": "classification_metrics.json",
+          "detail": "validation passed",
+          "id": "sg2_classification_gate",
+          "required": true,
+          "status": "done",
+          "title": "Local classification gate passes"
+        },
+        {
+          "artifact": "adapter_intent_metrics.json",
+          "detail": "validation passed",
+          "id": "sg3_adapter_gate",
+          "required": true,
+          "status": "done",
+          "title": "Adapter intent proxy gate passes"
+        }
+      ],
+      "title": "CPU-First Federated Foundation"
+    },
+    {
+      "description": "Demonstrate repeatable local generalist capability with explicit metric thresholds.",
+      "id": "g2_generality_reproducibility",
+      "status": "done",
+      "sub_goals": [
+        {
+          "artifact": "generality_metrics.json",
+          "detail": "validation passed",
+          "id": "sg1_generality_gate",
+          "required": true,
+          "status": "done",
+          "title": "Generality gate passes"
+        },
+        {
+          "artifact": "reproducibility_metrics.json",
+          "detail": "validation passed",
+          "id": "sg2_repro_gate",
+          "required": true,
+          "status": "done",
+          "title": "Reproducibility sweep gate passes"
+        }
+      ],
+      "title": "Generality and Reproducibility"
+    },
+    {
+      "description": "Keep the low-end smoke path and benchmark envelope healthy for commodity hardware contributors.",
+      "id": "g3_accessibility_ops",
+      "status": "done",
+      "sub_goals": [
+        {
+          "artifact": "benchmark_metrics.json",
+          "detail": "validation passed",
+          "id": "sg1_benchmark_gate",
+          "required": true,
+          "status": "done",
+          "title": "Reduced benchmark gate passes"
+        },
+        {
+          "artifact": "smoke_summary.json",
+          "detail": "smoke_summary ok=true total_duration_sec=7.102030624984764",
+          "id": "sg2_smoke_ok",
+          "required": true,
+          "status": "done",
+          "title": "Smoke summary reports overall success"
+        }
+      ],
+      "title": "Accessibility and Operational Reliability"
+    },
+    {
+      "description": "Track fairness behavior across heterogeneous contributor conditions.",
+      "id": "g4_decentralization_fairness",
+      "status": "done",
+      "sub_goals": [
+        {
+          "artifact": "fairness_metrics.json",
+          "detail": "validation passed",
+          "id": "sg1_fairness_gate",
+          "required": true,
+          "status": "done",
+          "title": "Baseline fairness gate passes"
+        },
+        {
+          "artifact": "utility_fairness_metrics.json",
+          "detail": "validation passed",
+          "id": "sg2_utility_fairness_gate",
+          "required": true,
+          "status": "done",
+          "title": "Utility fairness gate passes"
+        }
+      ],
+      "title": "Decentralization Fairness Resilience"
+    }
+  ],
+  "require_fairness": true,
+  "require_smoke_summary": true,
+  "schema_version": 1,
+  "summary": {
+    "all_done": true,
+    "completed_goals": 4,
+    "completed_required_sub_goals": 9,
+    "required_sub_goals": 9,
+    "total_goals": 4
+  }
+}

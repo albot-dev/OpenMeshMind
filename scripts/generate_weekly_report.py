@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,8 @@ DEFAULT_ARTIFACTS = [
     "utility_fedavg_metrics.json",
     "utility_fairness_metrics.json",
     "smoke_summary.json",
+    "main_track_status.json",
+    "docs/COMING_GOALS.md",
     "CHANGELOG.md",
     "DECISION_LOG.md",
     "PROVENANCE_TEMPLATE.md",
@@ -269,6 +272,29 @@ def reproducibility_summary(repro: dict[str, object] | None) -> list[str]:
     return lines
 
 
+def main_track_summary(status: dict[str, object] | None) -> list[str]:
+    if not status:
+        return ["main_track_status.json not found."]
+
+    summary = status.get("summary", {})
+    goals = status.get("goals", [])
+    lines = [
+        "goal completion:"
+        f" goals={summary.get('completed_goals')}/{summary.get('total_goals')},"
+        f" required_sub_goals={summary.get('completed_required_sub_goals')}/{summary.get('required_sub_goals')},"
+        f" all_done={summary.get('all_done')}",
+    ]
+
+    for goal in goals:
+        sub_goals = goal.get("sub_goals", [])
+        required = [item for item in sub_goals if item.get("required")]
+        done_required = [item for item in required if item.get("status") == "done"]
+        lines.append(
+            f"{goal.get('status')} {goal.get('title')}: "
+            f"required_sub_goals={len(done_required)}/{len(required)}"
+        )
+    return lines
+
 def build_report(
     repo: str,
     gh_status: dict[str, object],
@@ -284,6 +310,7 @@ def build_report(
     reproducibility = load_json(ROOT / "reproducibility_metrics.json")
     smoke = load_json(ROOT / "smoke_summary.json")
     generality = load_json(ROOT / "generality_metrics.json")
+    main_track = load_json(ROOT / "main_track_status.json")
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines: list[str] = []
@@ -318,6 +345,11 @@ def build_report(
             lines.append(f"  - #{issue['number']} {issue['title']}")
     lines.append("")
     lines.append("## Metrics Summary")
+    lines.append("")
+    lines.append("### Main Track Goals")
+    for item in main_track_summary(main_track):
+        lines.append(f"- {item}")
+    lines.append("- details: `docs/COMING_GOALS.md` and `reports/main_track_status.md`")
     lines.append("")
     lines.append("### Quality")
     for item in quality_summary(utility):
@@ -389,12 +421,27 @@ def main() -> int:
     )
     parser.add_argument(
         "--token-env-var",
-        default="GITHUB_TOKEN",
-        help="Env var used for GitHub auth (default: GITHUB_TOKEN).",
+        default="github_token",
+        help="Env var used for GitHub auth (default: github_token).",
     )
     args = parser.parse_args()
 
     repo = args.repo or get_default_repo()
+    status_code, status_out = run_cmd(
+        [
+            sys.executable,
+            "scripts/main_track_status.py",
+            "--require-fairness",
+            "--require-smoke-summary",
+            "--json-out",
+            "main_track_status.json",
+            "--md-out",
+            "reports/main_track_status.md",
+        ]
+    )
+    if status_code != 0:
+        print("Warning: failed to refresh main-track status artifacts.")
+        print(status_out)
     status = get_github_status(repo=repo, token_env_var=args.token_env_var)
     git_meta = get_git_meta()
 

@@ -129,6 +129,14 @@ jobs:
             --expected-schema-version 1 \
             --expected-mode reduced
 
+      - name: Validate main-track goals and sub-goals
+        run: |
+          python3 scripts/main_track_status.py \
+            --require-fairness \
+            --fail-on-incomplete \
+            --json-out main_track_status.json \
+            --md-out reports/main_track_status.md
+
       - name: Build pilot metrics report
         run: |
           python3 scripts/build_pilot_metrics.py \
@@ -238,6 +246,18 @@ jobs:
         with:
           name: pilot-cohort-metrics
           path: pilot/pilot_cohort_metrics.json
+
+      - name: Upload main-track status JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-track-status-json
+          path: main_track_status.json
+
+      - name: Upload main-track status markdown artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-track-status-markdown
+          path: reports/main_track_status.md
 
       - name: Upload pilot status report artifact
         uses: actions/upload-artifact@v4
