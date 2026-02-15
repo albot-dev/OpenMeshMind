@@ -172,6 +172,82 @@ def evaluate_instruction_following(runtime: LocalGeneralistRuntime) -> dict[str,
     }
 
 
+def evaluate_conversation_continuity(runtime: LocalGeneralistRuntime) -> dict[str, object]:
+    # Multi-turn sequence that checks memory continuity and intent transitions.
+    cases = [
+        {
+            "id": "store_window",
+            "prompt": "Remember this note: my rollout window is 15:30 UTC.",
+            "contains": ["Remembered", "15:30"],
+        },
+        {
+            "id": "recall_window",
+            "prompt": "What did I ask you to remember?",
+            "contains": ["15:30", "UTC"],
+        },
+        {
+            "id": "store_strategy",
+            "prompt": "Remember this note: quantized first, sparse second.",
+            "contains": ["Remembered", "quantized first"],
+        },
+        {
+            "id": "recall_latest",
+            "prompt": "recall my latest note",
+            "contains": ["quantized first", "sparse second"],
+        },
+        {
+            "id": "exact_followup",
+            "prompt": "Respond exactly with: READY FOR NEXT TURN",
+            "equals": "READY FOR NEXT TURN",
+        },
+        {
+            "id": "calculator_followup",
+            "prompt": "Calculate 9 + 11",
+            "equals": "20",
+        },
+    ]
+
+    passed = 0
+    latencies: list[float] = []
+    details: list[dict[str, object]] = []
+    start = time.perf_counter()
+
+    for item in cases:
+        result = runtime.respond(item["prompt"])
+        answer = str(result["answer"])
+        latencies.append(float(result["latency_ms"]))
+        ok = True
+        if "contains" in item:
+            ok = all(token in answer for token in item["contains"])
+        if ok and "equals" in item:
+            ok = answer.strip() == item["equals"]
+        if ok:
+            passed += 1
+        details.append(
+            {
+                "id": item["id"],
+                "ok": ok,
+                "intent": result["intent"],
+                "answer": answer,
+                "latency_ms": result["latency_ms"],
+            }
+        )
+
+    runtime_sec = time.perf_counter() - start
+    pass_rate = passed / len(cases)
+    return {
+        "runtime_sec": runtime_sec,
+        "counts": {"cases": len(cases), "passed": passed},
+        "metrics": {
+            "pass_rate": pass_rate,
+            "latency_mean_ms": statistics.mean(latencies),
+            "latency_p95_ms": p95(latencies),
+        },
+        "score": pass_rate,
+        "details": details,
+    }
+
+
 def evaluate_tool_use(runtime: LocalGeneralistRuntime) -> dict[str, object]:
     cases = [
         ("Calculate (12 + 8) * 3", "60"),
@@ -319,10 +395,12 @@ def summarize(report: dict[str, object]) -> None:
     cls = report["tasks"]["classification"]["metrics"]
     ret = report["tasks"]["retrieval"]["metrics"]
     ins = report["tasks"]["instruction_following"]["metrics"]
+    conv = report["tasks"]["conversation_continuity"]["metrics"]
     tool = report["tasks"]["tool_use"]["metrics"]
     print(f"classification: acc={cls['accuracy']:.4f}, f1={cls['macro_f1']:.4f}")
     print(f"retrieval: r@1={ret['recall_at_1']:.4f}, mrr={ret['mrr']:.4f}")
     print(f"instruction: pass_rate={ins['pass_rate']:.4f}")
+    print(f"conversation: pass_rate={conv['pass_rate']:.4f}")
     print(f"tool_use: pass_rate={tool['pass_rate']:.4f}")
     if "distributed_reference" in report["tasks"]:
         dist = report["tasks"]["distributed_reference"]["metrics"]
@@ -392,6 +470,7 @@ def main() -> int:
         "classification": evaluate_classification(seed=args.seed),
         "retrieval": evaluate_retrieval(top_k=args.top_k),
         "instruction_following": evaluate_instruction_following(runtime=runtime),
+        "conversation_continuity": evaluate_conversation_continuity(runtime=runtime),
         "tool_use": evaluate_tool_use(runtime=runtime),
     }
     if not args.skip_distributed_reference:

@@ -24,6 +24,7 @@ def main() -> int:
     parser.add_argument("--min-classification-accuracy-mean", type=float, default=0.80)
     parser.add_argument("--min-retrieval-recall-at-1-mean", type=float, default=0.60)
     parser.add_argument("--min-instruction-pass-rate-mean", type=float, default=0.70)
+    parser.add_argument("--min-conversation-pass-rate-mean", type=float, default=0.75)
     parser.add_argument("--min-tool-pass-rate-mean", type=float, default=0.80)
     parser.add_argument("--max-int8-accuracy-drop-mean", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-mean", type=float, default=40.0)
@@ -50,6 +51,7 @@ def main() -> int:
     cls_acc = summary.get("classification_accuracy", {})
     ret = summary.get("retrieval_recall_at_1", {})
     ins = summary.get("instruction_pass_rate", {})
+    conv = summary.get("conversation_pass_rate", {})
     tool = summary.get("tool_pass_rate", {})
 
     overall_mean = float(overall.get("mean", 0.0))
@@ -57,6 +59,7 @@ def main() -> int:
     cls_mean = float(cls_acc.get("mean", 0.0))
     ret_mean = float(ret.get("mean", 0.0))
     ins_mean = float(ins.get("mean", 0.0))
+    conv_mean = float(conv.get("mean", 0.0))
     tool_mean = float(tool.get("mean", 0.0))
 
     if overall_mean < args.min_overall_score_mean:
@@ -76,6 +79,10 @@ def main() -> int:
     if ins_mean < args.min_instruction_pass_rate_mean:
         failures.append(
             f"instruction_pass_rate mean {ins_mean:.4f} < {args.min_instruction_pass_rate_mean:.4f}"
+        )
+    if conv_mean < args.min_conversation_pass_rate_mean:
+        failures.append(
+            f"conversation_pass_rate mean {conv_mean:.4f} < {args.min_conversation_pass_rate_mean:.4f}"
         )
     if tool_mean < args.min_tool_pass_rate_mean:
         failures.append(f"tool_pass_rate mean {tool_mean:.4f} < {args.min_tool_pass_rate_mean:.4f}")
@@ -114,6 +121,7 @@ def main() -> int:
     print(f"- classification accuracy mean: {cls_mean:.4f}")
     print(f"- retrieval recall@1 mean: {ret_mean:.4f}")
     print(f"- instruction pass mean: {ins_mean:.4f}")
+    print(f"- conversation pass mean: {conv_mean:.4f}")
     print(f"- tool pass mean: {tool_mean:.4f}")
     if "int8_accuracy_drop" in summary:
         print(f"- int8 drop mean: {summary['int8_accuracy_drop'].get('mean'):.4f}")

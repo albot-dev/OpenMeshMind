@@ -12,10 +12,13 @@ baseline_results.json
 smoke_summary.json
 reports/weekly_status.md
 reports/weekly_artifacts.tgz
+reports/weekly_provenance_manifest.json
 reports/pilot_status.md
 reports/pilot_artifacts.tgz
 reports/pilot_14_day_report.md
 reports/pilot_14_day_artifacts.tgz
+pilot/pilot_status_provenance.json
+pilot/pilot_14_day_provenance.json
 pilot/cohort_onboarding_summary.json
 pilot/node_config.json
 pilot/node_state.json

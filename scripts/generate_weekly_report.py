@@ -30,6 +30,7 @@ DEFAULT_ARTIFACTS = [
     "smoke_summary.json",
     "main_track_status.json",
     "docs/COMING_GOALS.md",
+    "reports/weekly_provenance_manifest.json",
     "CHANGELOG.md",
     "DECISION_LOG.md",
     "PROVENANCE_TEMPLATE.md",
@@ -229,12 +230,14 @@ def generality_summary(generality: dict[str, object] | None) -> list[str]:
     cls = tasks.get("classification", {}).get("metrics", {})
     ret = tasks.get("retrieval", {}).get("metrics", {})
     ins = tasks.get("instruction_following", {}).get("metrics", {})
+    conv = tasks.get("conversation_continuity", {}).get("metrics", {})
     tool = tasks.get("tool_use", {}).get("metrics", {})
     lines.append(
         "generality core:"
         f" cls_acc={cls.get('accuracy')},"
         f" ret_r@1={ret.get('recall_at_1')},"
         f" instruction_pass={ins.get('pass_rate')},"
+        f" conversation_pass={conv.get('pass_rate')},"
         f" tool_pass={tool.get('pass_rate')}"
     )
     lines.append(f"generality overall score={aggregate.get('overall_score')}")
@@ -258,10 +261,13 @@ def reproducibility_summary(repro: dict[str, object] | None) -> list[str]:
         f" mean={overall.get('mean')}, std={overall.get('std')}, min={overall.get('min')}"
     ]
     instruction = summary.get("instruction_pass_rate", {})
+    conversation = summary.get("conversation_pass_rate", {})
     tool = summary.get("tool_pass_rate", {})
     lines.append(
-        "reproducibility instruction/tool means:"
-        f" instruction={instruction.get('mean')}, tool={tool.get('mean')}"
+        "reproducibility instruction/conversation/tool means:"
+        f" instruction={instruction.get('mean')},"
+        f" conversation={conversation.get('mean')},"
+        f" tool={tool.get('mean')}"
     )
     int8_drop = summary.get("int8_accuracy_drop")
     int8_save = summary.get("int8_comm_savings_percent")
@@ -297,6 +303,18 @@ def main_track_summary(status: dict[str, object] | None) -> list[str]:
         )
     return lines
 
+
+def provenance_summary(manifest: dict[str, object] | None) -> list[str]:
+    if not manifest:
+        return ["weekly provenance manifest not found."]
+    git_meta = manifest.get("git", {})
+    return [
+        f"label={manifest.get('label')}",
+        f"artifact_count={manifest.get('artifact_count')}",
+        f"commit={git_meta.get('commit')}",
+    ]
+
+
 def build_report(
     repo: str,
     gh_status: dict[str, object],
@@ -313,6 +331,7 @@ def build_report(
     smoke = load_json(ROOT / "smoke_summary.json")
     generality = load_json(ROOT / "generality_metrics.json")
     main_track = load_json(ROOT / "main_track_status.json")
+    provenance = load_json(ROOT / "reports/weekly_provenance_manifest.json")
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines: list[str] = []
@@ -352,6 +371,8 @@ def build_report(
     for item in main_track_summary(main_track):
         lines.append(f"- {item}")
     lines.append("- details: `docs/COMING_GOALS.md` and `reports/main_track_status.md`")
+    for item in provenance_summary(provenance):
+        lines.append(f"- weekly provenance: {item}")
     lines.append("")
     lines.append("### Quality")
     for item in quality_summary(utility):
@@ -444,6 +465,37 @@ def main() -> int:
     if status_code != 0:
         print("Warning: failed to refresh main-track status artifacts.")
         print(status_out)
+    provenance_cmd = [
+        sys.executable,
+        "scripts/build_provenance_manifest.py",
+        "--label",
+        "weekly-status",
+        "--repo",
+        repo,
+        "--out",
+        "reports/weekly_provenance_manifest.json",
+    ]
+    for rel in [
+        "baseline_metrics.json",
+        "classification_metrics.json",
+        "generality_metrics.json",
+        "adapter_intent_metrics.json",
+        "reproducibility_metrics.json",
+        "benchmark_metrics.json",
+        "fairness_metrics.json",
+        "utility_fedavg_metrics.json",
+        "utility_fairness_metrics.json",
+        "smoke_summary.json",
+        "main_track_status.json",
+        "docs/COMING_GOALS.md",
+    ]:
+        provenance_cmd.extend(["--artifact", rel])
+    prov_code, prov_out = run_cmd(provenance_cmd)
+    if prov_out:
+        print(prov_out)
+    if prov_code != 0:
+        print("Warning: failed to generate weekly provenance manifest.")
+
     status = get_github_status(repo=repo, token_env_var=args.token_env_var)
     git_meta = get_git_meta()
 

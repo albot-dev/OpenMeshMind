@@ -16,6 +16,14 @@ All notable changes to OpenMeshMind are documented here.
   - CI pipeline (`.github/workflows/cpu-baseline.yml`)
   - weekly reporting bundle/summary (`scripts/generate_weekly_report.py`)
 - Added unit tests for main-track status behavior: `tests/test_main_track_status.py`.
+- Added conversational continuity metric to the generality/reproducibility gates:
+  - `conversation_continuity` task in `scripts/evaluate_generality.py`
+  - threshold checks in `scripts/check_generality.py` and `scripts/check_reproducibility.py`
+  - reproducibility aggregation updates in `scripts/reproducibility_sweep.py`
+- Added provenance manifest automation and validation:
+  - `scripts/build_provenance_manifest.py`
+  - `scripts/check_provenance_manifest.py`
+  - integrated into weekly + pilot report generators and CI artifact checks
 - Promoted pilot rehearsal artifacts to a 6-node single-operator multi-machine cohort:
   - updated `pilot/cohort_manifest.json` with passed onboarding entries
   - `pilot/cohort_onboarding_summary.json`

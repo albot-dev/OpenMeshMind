@@ -18,9 +18,10 @@ A build is considered MVP-ready when it can pass the following task families loc
 1. Local classification quality
 2. Local retrieval quality
 3. Instruction following (action compliance)
-4. Tool use (calculator correctness)
-5. Centralized vs federated distributed reference comparison
-6. Adapter-style federated proxy check (low-rank intent adapter)
+4. Conversation continuity (multi-turn memory + intent transitions)
+5. Tool use (calculator correctness)
+6. Centralized vs federated distributed reference comparison
+7. Adapter-style federated proxy check (low-rank intent adapter)
 
 ## Required thresholds
 
@@ -33,6 +34,7 @@ These are the default gates implemented in `scripts/check_generality.py`.
 | Retrieval | recall@1 | `>= 0.60` |
 | Retrieval | MRR | `>= 0.75` |
 | Instruction following | pass rate | `>= 0.75` |
+| Conversation continuity | pass rate | `>= 0.80` |
 | Tool use | pass rate | `>= 0.80` |
 | Aggregate | overall score | `>= 0.75` |
 | Runtime envelope | total eval wall clock | `<= 180s` |

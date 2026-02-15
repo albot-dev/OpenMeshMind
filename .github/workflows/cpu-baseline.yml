@@ -169,6 +169,14 @@ jobs:
             --cohort-metrics pilot/pilot_cohort_metrics.json \
             --out reports/pilot_status.md
 
+      - name: Validate pilot status provenance manifest
+        run: |
+          python3 scripts/check_provenance_manifest.py \
+            pilot/pilot_status_provenance.json \
+            --expected-schema-version 1 \
+            --min-artifacts 2 \
+            --verify-sha256
+
       - name: Validate cohort manifest
         run: |
           python3 scripts/check_cohort_manifest.py \
@@ -186,6 +194,14 @@ jobs:
             --daily-cohort-glob 'pilot/runs/day*/pilot_cohort_metrics.json' \
             --incident-log pilot/incident_log.json \
             --out reports/pilot_14_day_report.md
+
+      - name: Validate pilot 14-day provenance manifest
+        run: |
+          python3 scripts/check_provenance_manifest.py \
+            pilot/pilot_14_day_provenance.json \
+            --expected-schema-version 1 \
+            --min-artifacts 4 \
+            --verify-sha256
 
       - name: Upload baseline metrics artifact
         uses: actions/upload-artifact@v4
@@ -265,8 +281,20 @@ jobs:
           name: pilot-status-report
           path: reports/pilot_status.md
 
+      - name: Upload pilot status provenance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-status-provenance
+          path: pilot/pilot_status_provenance.json
+
       - name: Upload pilot 14-day draft report artifact
         uses: actions/upload-artifact@v4
         with:
           name: pilot-14-day-draft-report
           path: reports/pilot_14_day_report.md
+
+      - name: Upload pilot 14-day provenance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-14-day-provenance
+          path: pilot/pilot_14_day_provenance.json

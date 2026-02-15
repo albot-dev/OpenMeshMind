@@ -31,4 +31,5 @@ class ReproducibilitySweepTests(unittest.TestCase):
             self.assertEqual(len(payload["runs"]), 2)
             self.assertIn("overall_score", payload["summary"])
             self.assertIn("classification_accuracy", payload["summary"])
+            self.assertIn("conversation_pass_rate", payload["summary"])
             self.assertNotIn("int8_accuracy_drop", payload["summary"])

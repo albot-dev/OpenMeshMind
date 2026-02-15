@@ -29,6 +29,7 @@ class EvaluateGeneralityTests(unittest.TestCase):
             self.assertIn("classification", payload["tasks"])
             self.assertIn("retrieval", payload["tasks"])
             self.assertIn("instruction_following", payload["tasks"])
+            self.assertIn("conversation_continuity", payload["tasks"])
             self.assertIn("tool_use", payload["tasks"])
             self.assertNotIn("distributed_reference", payload["tasks"])
             self.assertGreaterEqual(payload["aggregate"]["overall_score"], 0.5)

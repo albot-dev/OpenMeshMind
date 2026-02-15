@@ -62,6 +62,7 @@ def run_seed(seed: int, top_k: int, include_distributed_reference: bool) -> dict
         "retrieval_recall_at_1": float(tasks["retrieval"]["metrics"]["recall_at_1"]),
         "retrieval_mrr": float(tasks["retrieval"]["metrics"]["mrr"]),
         "instruction_pass_rate": float(tasks["instruction_following"]["metrics"]["pass_rate"]),
+        "conversation_pass_rate": float(tasks["conversation_continuity"]["metrics"]["pass_rate"]),
         "tool_pass_rate": float(tasks["tool_use"]["metrics"]["pass_rate"]),
     }
     distributed = tasks.get("distributed_reference")
@@ -96,6 +97,7 @@ def summarize_runs(runs: list[dict[str, float]]) -> dict[str, object]:
         "retrieval_recall_at_1",
         "retrieval_mrr",
         "instruction_pass_rate",
+        "conversation_pass_rate",
         "tool_pass_rate",
     ]
     summary = {key: summarize_metric([float(run[key]) for run in runs]) for key in keys}
@@ -131,8 +133,9 @@ def print_summary(report: dict[str, object]) -> None:
         f" min={summary['overall_score']['min']:.4f}"
     )
     print(
-        "instruction/tool pass:"
+        "instruction/conversation/tool pass:"
         f" instruction_mean={summary['instruction_pass_rate']['mean']:.4f},"
+        f" conversation_mean={summary['conversation_pass_rate']['mean']:.4f},"
         f" tool_mean={summary['tool_pass_rate']['mean']:.4f}"
     )
     if "int8_accuracy_drop" in summary:

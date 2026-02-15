@@ -23,6 +23,7 @@ def main() -> int:
     parser.add_argument("--min-retrieval-recall-at-1", type=float, default=0.60)
     parser.add_argument("--min-retrieval-mrr", type=float, default=0.75)
     parser.add_argument("--min-instruction-pass-rate", type=float, default=0.75)
+    parser.add_argument("--min-conversation-pass-rate", type=float, default=0.80)
     parser.add_argument("--min-tool-pass-rate", type=float, default=0.80)
     parser.add_argument("--min-overall-score", type=float, default=0.75)
     parser.add_argument("--max-total-runtime-sec", type=float, default=180.0)
@@ -43,7 +44,7 @@ def main() -> int:
         )
 
     tasks = report.get("tasks", {})
-    required = ["classification", "retrieval", "instruction_following", "tool_use"]
+    required = ["classification", "retrieval", "instruction_following", "conversation_continuity", "tool_use"]
     for name in required:
         if name not in tasks:
             failures.append(f"missing task section: {name}")
@@ -58,6 +59,7 @@ def main() -> int:
     cls = tasks["classification"]["metrics"]
     ret = tasks["retrieval"]["metrics"]
     ins = tasks["instruction_following"]["metrics"]
+    conv = tasks["conversation_continuity"]["metrics"]
     tool = tasks["tool_use"]["metrics"]
     aggregate = report.get("aggregate", {})
     resources = report.get("resources", {})
@@ -77,6 +79,10 @@ def main() -> int:
     if ins["pass_rate"] < args.min_instruction_pass_rate:
         failures.append(
             f"instruction pass_rate {ins['pass_rate']:.4f} < {args.min_instruction_pass_rate:.4f}"
+        )
+    if conv["pass_rate"] < args.min_conversation_pass_rate:
+        failures.append(
+            f"conversation pass_rate {conv['pass_rate']:.4f} < {args.min_conversation_pass_rate:.4f}"
         )
     if tool["pass_rate"] < args.min_tool_pass_rate:
         failures.append(f"tool pass_rate {tool['pass_rate']:.4f} < {args.min_tool_pass_rate:.4f}")
@@ -127,6 +133,7 @@ def main() -> int:
     print(f"- retrieval recall@1: {ret['recall_at_1']:.4f}")
     print(f"- retrieval mrr: {ret['mrr']:.4f}")
     print(f"- instruction pass_rate: {ins['pass_rate']:.4f}")
+    print(f"- conversation pass_rate: {conv['pass_rate']:.4f}")
     print(f"- tool pass_rate: {tool['pass_rate']:.4f}")
     print(f"- overall score: {overall:.4f}")
     print(f"- total runtime: {runtime_total:.2f}s")

@@ -1,9 +1,9 @@
 # Pilot 14-Day Report
 
-- Report date (UTC): 2026-02-15 20:07 UTC
+- Report date (UTC): 2026-02-15 20:25 UTC
 - Pilot window: 14-day pilot window
 - Cohort ID: pilot-cohort-2026w08
-- Commit/tag: bc024595c94bad14ca94cb60efa8b082c895c975
+- Commit/tag: db8550bb89794aed7c73d5ee8036a8dd1ffa2baf
 - Artifact bundle: reports/pilot_14_day_artifacts.tgz
 
 ## Executive summary

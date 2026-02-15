@@ -9,6 +9,7 @@ import argparse
 import glob
 import json
 import subprocess
+import sys
 import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -77,6 +78,7 @@ def main() -> int:
     parser.add_argument("--out", default="reports/pilot_14_day_report.md")
     parser.add_argument("--window-label", default="14-day pilot window")
     parser.add_argument("--bundle-out", default="")
+    parser.add_argument("--provenance-out", default="pilot/pilot_14_day_provenance.json")
     args = parser.parse_args()
 
     manifest = load_json(resolve(args.manifest)) or {}
@@ -199,6 +201,31 @@ def main() -> int:
     out_path.write_text(report, encoding="utf-8")
     print(f"Pilot 14-day report written to: {out_path}")
 
+    provenance_cmd = [
+        sys.executable,
+        "scripts/build_provenance_manifest.py",
+        "--label",
+        "pilot-14-day",
+        "--out",
+        args.provenance_out,
+        "--artifact",
+        args.manifest,
+        "--artifact",
+        args.onboarding_summary,
+        "--artifact",
+        args.incident_log,
+        "--artifact",
+        args.out,
+    ]
+    for daily_path in daily_paths:
+        rel = str(Path(daily_path).relative_to(ROOT))
+        provenance_cmd.extend(["--artifact", rel])
+    prov_code, prov_out = run_cmd(provenance_cmd)
+    if prov_out:
+        print(prov_out)
+    if prov_code != 0:
+        print("Warning: failed to generate pilot 14-day provenance manifest.")
+
     if args.bundle_out:
         bundle_path = resolve(args.bundle_out)
         bundle_path.parent.mkdir(parents=True, exist_ok=True)
@@ -213,6 +240,14 @@ def main() -> int:
                 if p.exists():
                     arc = str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else p.name
                     tar.add(p, arcname=arc)
+            provenance_path = resolve(args.provenance_out)
+            if provenance_path.exists():
+                arc = (
+                    str(provenance_path.relative_to(ROOT))
+                    if provenance_path.is_relative_to(ROOT)
+                    else provenance_path.name
+                )
+                tar.add(provenance_path, arcname=arc)
         print(f"Pilot 14-day artifact bundle written to: {bundle_path}")
 
     return 0

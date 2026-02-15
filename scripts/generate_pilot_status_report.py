@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import sys
 import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +29,17 @@ def load_json(path: Path) -> dict[str, object] | None:
         return None
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def run_cmd(args: list[str]) -> tuple[int, str]:
+    proc = subprocess.run(
+        args,
+        cwd=str(ROOT),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    return proc.returncode, proc.stdout.strip()
 
 
 def get(path: dict[str, object], *keys: str, default: object = "n/a") -> object:
@@ -160,10 +173,16 @@ def render_template(template: str, replacements: dict[str, str]) -> str:
     return rendered
 
 
-def bundle_artifacts(bundle_path: Path, report_path: Path, pilot_path: Path, cohort_path: Path) -> list[str]:
+def bundle_artifacts(
+    bundle_path: Path,
+    report_path: Path,
+    pilot_path: Path,
+    cohort_path: Path,
+    provenance_path: Path,
+) -> list[str]:
     added: list[str] = []
     with tarfile.open(bundle_path, "w:gz") as tar:
-        for path in [pilot_path, cohort_path, report_path]:
+        for path in [pilot_path, cohort_path, report_path, provenance_path]:
             if path.exists():
                 arc = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else path.name
                 tar.add(path, arcname=arc)
@@ -203,6 +222,11 @@ def main() -> int:
         default="",
         help="Optional path to artifact bundle .tgz.",
     )
+    parser.add_argument(
+        "--provenance-out",
+        default="pilot/pilot_status_provenance.json",
+        help="Output path for provenance manifest JSON.",
+    )
     args = parser.parse_args()
 
     pilot_path = resolve(args.pilot_metrics)
@@ -233,6 +257,27 @@ def main() -> int:
     out_path.write_text(report, encoding="utf-8")
     print(f"Pilot status report written to: {out_path}")
 
+    provenance_path = resolve(args.provenance_out)
+    provenance_cmd = [
+        sys.executable,
+        "scripts/build_provenance_manifest.py",
+        "--label",
+        "pilot-status",
+        "--out",
+        args.provenance_out,
+        "--artifact",
+        args.pilot_metrics,
+        "--artifact",
+        args.cohort_metrics,
+        "--artifact",
+        args.out,
+    ]
+    prov_code, prov_out = run_cmd(provenance_cmd)
+    if prov_out:
+        print(prov_out)
+    if prov_code != 0:
+        print("Warning: failed to generate pilot status provenance manifest.")
+
     if args.bundle_out:
         bundle_path = resolve(args.bundle_out)
         bundle_path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,6 +286,7 @@ def main() -> int:
             report_path=out_path,
             pilot_path=pilot_path,
             cohort_path=cohort_path,
+            provenance_path=provenance_path,
         )
         print(f"Pilot artifact bundle written to: {bundle_path}")
         print(f"Bundled files: {len(added)}")

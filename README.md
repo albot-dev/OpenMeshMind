@@ -162,7 +162,7 @@ python3 scripts/reproducibility_sweep.py --seeds 7,17,27 --json-out reproducibil
 python3 scripts/check_reproducibility.py reproducibility_metrics.json
 ```
 
-The generality and reproducibility gates include both distributed FedAvg reference and adapter-reference communication/quality checks.
+The generality and reproducibility gates include multi-turn conversation continuity checks plus distributed FedAvg and adapter-reference communication/quality checks.
 
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
 
@@ -196,6 +196,8 @@ python3 scripts/generate_weekly_report.py \
   --out reports/weekly_status.md \
   --bundle-out reports/weekly_artifacts.tgz
 ```
+
+This also refreshes `reports/weekly_provenance_manifest.json`.
 
 Run pilot node cycle and health checks (single-operator fast path):
 
@@ -234,6 +236,11 @@ python3 scripts/solo_multi_machine_mode.py \
   --min-passed 0 \
   --require-metrics-files
 ```
+
+Provenance manifests are generated automatically:
+
+- `pilot/pilot_status_provenance.json`
+- `pilot/pilot_14_day_provenance.json`
 
 Current pilot mode:
 

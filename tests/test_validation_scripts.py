@@ -1,4 +1,5 @@
 import io
+import hashlib
 import json
 import sys
 import tempfile
@@ -15,6 +16,7 @@ from scripts import check_fairness
 from scripts import check_generality
 from scripts import check_pilot_cohort
 from scripts import check_pilot_metrics
+from scripts import check_provenance_manifest
 from scripts import check_reproducibility
 from scripts import check_utility_fairness
 
@@ -31,6 +33,59 @@ class ValidationScriptTests(unittest.TestCase):
             with mock.patch("sys.stdout", stdout):
                 code = fn()
         return code, stdout.getvalue()
+
+    def test_check_provenance_manifest_pass_and_fail_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            artifact_ok = tmp / "artifact_ok.txt"
+            artifact_ok.write_text("artifact-ok", encoding="utf-8")
+            digest_ok = hashlib.sha256(artifact_ok.read_bytes()).hexdigest()
+
+            valid = self._write_json(
+                tmp,
+                "provenance_ok.json",
+                {
+                    "schema_version": 1,
+                    "label": "weekly-status",
+                    "artifacts": [
+                        {
+                            "path": str(artifact_ok),
+                            "sha256": digest_ok,
+                            "size_bytes": artifact_ok.stat().st_size,
+                        }
+                    ],
+                },
+            )
+
+            invalid = self._write_json(
+                tmp,
+                "provenance_bad.json",
+                {
+                    "schema_version": 1,
+                    "label": "weekly-status",
+                    "artifacts": [
+                        {
+                            "path": str(artifact_ok),
+                            "sha256": "0" * 64,
+                            "size_bytes": 999,
+                        }
+                    ],
+                },
+            )
+
+            code_ok, out_ok = self._run_main(
+                check_provenance_manifest.main,
+                ["check_provenance_manifest.py", str(valid), "--verify-sha256"],
+            )
+            self.assertEqual(code_ok, 0)
+            self.assertIn("Validation passed.", out_ok)
+
+            code_bad, out_bad = self._run_main(
+                check_provenance_manifest.main,
+                ["check_provenance_manifest.py", str(invalid), "--verify-sha256"],
+            )
+            self.assertEqual(code_bad, 1)
+            self.assertIn("Validation failed:", out_bad)
 
     def test_check_baseline_pass_and_fail_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -282,6 +337,11 @@ class ValidationScriptTests(unittest.TestCase):
                                 "pass_rate": 0.90,
                             }
                         },
+                        "conversation_continuity": {
+                            "metrics": {
+                                "pass_rate": 0.92,
+                            }
+                        },
                         "tool_use": {
                             "metrics": {
                                 "pass_rate": 1.00,
@@ -325,6 +385,11 @@ class ValidationScriptTests(unittest.TestCase):
                         "instruction_following": {
                             "metrics": {
                                 "pass_rate": 0.50,
+                            }
+                        },
+                        "conversation_continuity": {
+                            "metrics": {
+                                "pass_rate": 0.40,
                             }
                         },
                         "tool_use": {
@@ -382,6 +447,7 @@ class ValidationScriptTests(unittest.TestCase):
                         "classification_accuracy": {"mean": 0.92},
                         "retrieval_recall_at_1": {"mean": 0.82},
                         "instruction_pass_rate": {"mean": 0.80},
+                        "conversation_pass_rate": {"mean": 0.84},
                         "tool_pass_rate": {"mean": 0.95},
                         "int8_accuracy_drop": {"mean": 0.04},
                         "int8_comm_savings_percent": {"mean": 72.0},
@@ -399,6 +465,7 @@ class ValidationScriptTests(unittest.TestCase):
                         "classification_accuracy": {"mean": 0.60},
                         "retrieval_recall_at_1": {"mean": 0.40},
                         "instruction_pass_rate": {"mean": 0.50},
+                        "conversation_pass_rate": {"mean": 0.40},
                         "tool_pass_rate": {"mean": 0.70},
                         "int8_accuracy_drop": {"mean": 0.30},
                         "int8_comm_savings_percent": {"mean": 20.0},
