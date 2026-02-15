@@ -79,6 +79,8 @@ def get_default_repo() -> str:
 def gh_env(token_env_var: str) -> dict[str, str]:
     env = os.environ.copy()
     token = env.get(token_env_var, "")
+    if not token:
+        token = env.get("github_token", "") or env.get("GITHUB_TOKEN", "")
     if token:
         env["GH_TOKEN"] = token
     return env
