@@ -306,3 +306,5 @@ See `ROADMAP.md` for phased execution and `docs/COMING_GOALS.md` for current goa
 - Completed Phase 3 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/3>
 - Completed Phase 4 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/4>
 - Completed Phase 6 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/6>
+- Completed Phase 7 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/7>
+- Completed Phase 8 milestone: <https://github.com/albot-dev/OpenMeshMind/milestone/8>
