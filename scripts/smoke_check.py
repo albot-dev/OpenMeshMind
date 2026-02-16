@@ -43,6 +43,11 @@ def main() -> int:
         default="",
         help="Optional path to write smoke summary JSON.",
     )
+    parser.add_argument(
+        "--skip-readiness-check",
+        action="store_true",
+        help="Skip MVP readiness check step in --include-fairness mode.",
+    )
     args = parser.parse_args()
 
     steps: list[tuple[str, list[str]]] = [
@@ -303,9 +308,22 @@ def main() -> int:
     if args.include_fairness:
         main_track_cmd.extend(["--require-fairness", "--fail-on-incomplete"])
 
+    readiness_cmd = [
+        sys.executable,
+        "scripts/check_mvp_readiness.py",
+        "--main-track-status",
+        "main_track_status.json",
+        "--json-out",
+        "mvp_readiness.json",
+    ]
+    if args.include_fairness:
+        readiness_cmd.extend(["--require-fairness", "--require-all-goals-done"])
+    run_readiness_check = args.include_fairness and not args.skip_readiness_check
+
     summary: dict[str, object] = {
         "schema_version": 1,
         "include_fairness": args.include_fairness,
+        "readiness_check_enabled": run_readiness_check,
         "steps": [],
     }
     total_start = time.perf_counter()
@@ -353,6 +371,26 @@ def main() -> int:
             with open(args.json_out, "w", encoding="utf-8") as f:
                 json.dump(summary, f, indent=2, sort_keys=True)
         return 1
+
+    if run_readiness_check:
+        print(f"[smoke] mvp_readiness_check: {' '.join(readiness_cmd)}")
+        ok, duration, output = run_step(name="mvp_readiness_check", cmd=readiness_cmd)
+        summary["steps"].append(
+            {
+                "name": "mvp_readiness_check",
+                "ok": ok,
+                "duration_sec": duration,
+            }
+        )
+        print(f"[smoke] mvp_readiness_check: {'ok' if ok else 'failed'} ({duration:.2f}s)")
+        if not ok:
+            print(output)
+            summary["ok"] = False
+            summary["total_duration_sec"] = time.perf_counter() - total_start
+            if args.json_out:
+                with open(args.json_out, "w", encoding="utf-8") as f:
+                    json.dump(summary, f, indent=2, sort_keys=True)
+            return 1
 
     summary["total_duration_sec"] = time.perf_counter() - total_start
     print(f"[smoke] total: {summary['total_duration_sec']:.2f}s")

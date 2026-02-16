@@ -1,10 +1,10 @@
 # Main Track Status
 
-- Generated: `2026-02-16T08:54:08.419289+00:00`
-- Require fairness: `False`
-- Require smoke summary: `False`
+- Generated: `2026-02-16T09:15:33.499228+00:00`
+- Require fairness: `True`
+- Require smoke summary: `True`
 - Completed goals: `4/4`
-- Completed required sub-goals: `6/6`
+- Completed required sub-goals: `9/9`
 - All done: `True`
 
 ## CPU-First Federated Foundation (done)
@@ -30,13 +30,13 @@
 - Keep the low-end smoke path and benchmark envelope healthy for commodity hardware contributors.
 - [x] Reduced benchmark gate passes (`done`, `required`, artifact=`benchmark_metrics.json`)
 - Detail: validation passed
-- [x] Smoke summary reports overall success (`done`, `optional`, artifact=`smoke_summary.json`)
-- Detail: smoke_summary ok=true total_duration_sec=11.355634208011907
+- [x] Smoke summary reports overall success (`done`, `required`, artifact=`smoke_summary.json`)
+- Detail: smoke_summary ok=true total_duration_sec=14.308808041969314
 
 ## Decentralization Fairness Resilience (done)
 
 - Track fairness behavior across heterogeneous contributor conditions.
-- [x] Baseline fairness gate passes (`done`, `optional`, artifact=`fairness_metrics.json`)
+- [x] Baseline fairness gate passes (`done`, `required`, artifact=`fairness_metrics.json`)
 - Detail: validation passed
-- [x] Utility fairness gate passes (`done`, `optional`, artifact=`utility_fairness_metrics.json`)
+- [x] Utility fairness gate passes (`done`, `required`, artifact=`utility_fairness_metrics.json`)
 - Detail: validation passed

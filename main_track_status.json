@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-02-16T08:54:08.419289+00:00",
+  "generated_utc": "2026-02-16T09:15:33.499228+00:00",
   "goals": [
     {
       "description": "Keep federated CPU baselines and adapter proxy quality stable with communication savings.",
@@ -72,9 +72,9 @@
         },
         {
           "artifact": "smoke_summary.json",
-          "detail": "smoke_summary ok=true total_duration_sec=11.355634208011907",
+          "detail": "smoke_summary ok=true total_duration_sec=14.308808041969314",
           "id": "sg2_smoke_ok",
-          "required": false,
+          "required": true,
           "status": "done",
           "title": "Smoke summary reports overall success"
         }
@@ -90,7 +90,7 @@
           "artifact": "fairness_metrics.json",
           "detail": "validation passed",
           "id": "sg1_fairness_gate",
-          "required": false,
+          "required": true,
           "status": "done",
           "title": "Baseline fairness gate passes"
         },
@@ -98,7 +98,7 @@
           "artifact": "utility_fairness_metrics.json",
           "detail": "validation passed",
           "id": "sg2_utility_fairness_gate",
-          "required": false,
+          "required": true,
           "status": "done",
           "title": "Utility fairness gate passes"
         }
@@ -106,14 +106,14 @@
       "title": "Decentralization Fairness Resilience"
     }
   ],
-  "require_fairness": false,
-  "require_smoke_summary": false,
+  "require_fairness": true,
+  "require_smoke_summary": true,
   "schema_version": 1,
   "summary": {
     "all_done": true,
     "completed_goals": 4,
-    "completed_required_sub_goals": 6,
-    "required_sub_goals": 6,
+    "completed_required_sub_goals": 9,
+    "required_sub_goals": 9,
     "total_goals": 4
   }
 }

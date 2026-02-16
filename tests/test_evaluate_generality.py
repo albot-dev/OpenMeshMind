@@ -9,6 +9,14 @@ from scripts import evaluate_generality
 
 
 class EvaluateGeneralityTests(unittest.TestCase):
+    def test_p95_handles_empty_and_singleton_inputs(self) -> None:
+        self.assertEqual(evaluate_generality.p95([]), 0.0)
+        self.assertEqual(evaluate_generality.p95([42.0]), 42.0)
+
+    def test_p95_interpolates_small_samples(self) -> None:
+        self.assertAlmostEqual(evaluate_generality.p95([3.0, 1.0, 2.0]), 2.9)
+        self.assertAlmostEqual(evaluate_generality.p95([10.0, 20.0]), 19.5)
+
     def test_main_writes_expected_schema_without_distributed_reference(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             out = Path(tmpdir) / "generality.json"

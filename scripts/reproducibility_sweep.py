@@ -16,6 +16,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+MIN_SWEEP_SEEDS = 3
 
 
 def utc_now_iso() -> str:
@@ -181,7 +182,7 @@ def main() -> int:
     parser.add_argument(
         "--seeds",
         default="7,17,27",
-        help="Comma-separated seeds for repeatability sweep.",
+        help="Comma-separated seeds for repeatability sweep (minimum 3).",
     )
     parser.add_argument(
         "--top-k",
@@ -213,8 +214,8 @@ def main() -> int:
     args = parser.parse_args()
 
     seeds = [int(item.strip()) for item in args.seeds.split(",") if item.strip()]
-    if len(seeds) < 2:
-        print("Need at least two seeds for a reproducibility sweep.")
+    if len(seeds) < MIN_SWEEP_SEEDS:
+        print(f"Need at least {MIN_SWEEP_SEEDS} seeds for a reproducibility sweep.")
         return 1
 
     runs = [

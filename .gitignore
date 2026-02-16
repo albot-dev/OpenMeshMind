@@ -10,6 +10,7 @@ baseline_metrics.json
 baseline_results.json
 *_metrics.json
 smoke_summary.json
+mvp_readiness.json
 reports/weekly_status.md
 reports/weekly_artifacts.tgz
 reports/weekly_provenance_manifest.json

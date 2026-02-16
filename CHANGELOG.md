@@ -35,6 +35,23 @@ All notable changes to OpenMeshMind are documented here.
   - `docs/MVP_CRITERIA.md`
   - `docs/NEXT_STEPS.md`
   - `ROADMAP.md`
+- Added full user-value MVP planning and verification artifacts:
+  - `docs/MVP_USER_VALUE_PLAN.md`
+  - `docs/MVP_DEFINITION_OF_DONE.md`
+  - `docs/MVP_TASK_BREAKDOWN.md`
+- Added machine-verifiable readiness checker and smoke-path integration:
+  - `scripts/check_mvp_readiness.py`
+  - `scripts/smoke_check.py` (`mvp_readiness_check` strict step)
+  - `tests/test_check_mvp_readiness.py`
+
+### Changed
+
+- Improved latency percentile reporting in `scripts/evaluate_generality.py` by using interpolated p95 computation.
+- Aligned reproducibility sweep behavior with validation expectations:
+  - `scripts/reproducibility_sweep.py` now requires at least 3 seeds.
+  - Added tests covering p95 behavior and minimum-seed sweep behavior:
+    - `tests/test_evaluate_generality.py`
+    - `tests/test_reproducibility_sweep.py`
 
 ## 2026-02-15
 

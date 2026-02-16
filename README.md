@@ -167,6 +167,9 @@ python3 scripts/check_reproducibility.py reproducibility_metrics.json
 The generality and reproducibility gates include long-context retrieval checks, multi-turn conversation continuity, multi-step tool chains, plus distributed FedAvg and adapter-reference communication/quality checks.
 
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
+MVP user-value plan: `docs/MVP_USER_VALUE_PLAN.md`.
+MVP Definition of Done checklist: `docs/MVP_DEFINITION_OF_DONE.md`.
+MVP granular task breakdown: `docs/MVP_TASK_BREAKDOWN.md`.
 
 Track current coming goals and sub-goals:
 
@@ -187,7 +190,17 @@ python3 scripts/main_track_status.py \
   --md-out reports/main_track_status.md
 ```
 
+Machine-verifiable MVP readiness check:
+
+```bash
+python3 scripts/check_mvp_readiness.py \
+  --require-fairness \
+  --require-all-goals-done \
+  --json-out mvp_readiness.json
+```
+
 Current goals document: `docs/COMING_GOALS.md`.
+Execution sequencing: `docs/NEXT_STEPS.md`.
 
 Release process and tagging workflow: `RELEASE.md`.
 

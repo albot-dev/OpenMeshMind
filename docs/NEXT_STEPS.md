@@ -8,6 +8,13 @@ This plan continues from the completed MVP, pilot execution, and provenance mile
 - Weekly and pilot provenance manifests are generated and validated.
 - External cohort intake remains open, but currently depends on outside participants.
 
+## Execution References
+
+- MVP user-value plan: `docs/MVP_USER_VALUE_PLAN.md`
+- MVP Definition of Done checklist: `docs/MVP_DEFINITION_OF_DONE.md`
+- MVP granular task backlog: `docs/MVP_TASK_BREAKDOWN.md`
+- MVP threshold reference: `docs/MVP_CRITERIA.md`
+
 ## Phase N1: External Cohort Readiness Hardening (Completed)
 
 Goal: tighten validation before wider external volunteer intake.
@@ -79,6 +86,6 @@ Exit criteria:
 
 ## Immediate execution order
 
-1. Execute N4 reliability hardening and publish machine-comparison artifacts.
-2. Keep N2 intake open for external contributors as data arrives.
-3. Regenerate pilot reports when N2 reaches the required external cohort size.
+1. Execute N4 reliability hardening and publish machine-comparison artifacts, aligned to phase targets in `docs/MVP_USER_VALUE_PLAN.md`.
+2. Keep N2 intake open for external contributors as data arrives, and validate refreshed artifacts with `docs/MVP_DEFINITION_OF_DONE.md`.
+3. Regenerate pilot reports when N2 reaches the required external cohort size, then re-run the strict DoD checklist before release decisions.

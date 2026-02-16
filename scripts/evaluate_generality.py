@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import resource
 import statistics
 import sys
@@ -44,10 +45,15 @@ def utc_now_iso() -> str:
 def p95(values: list[float]) -> float:
     if not values:
         return 0.0
-    if len(values) == 1:
-        return values[0]
-    idx = int(0.95 * (len(values) - 1))
-    return sorted(values)[idx]
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return float(ordered[0])
+    rank = 0.95 * (len(ordered) - 1)
+    lower_idx = math.floor(rank)
+    upper_idx = math.ceil(rank)
+    lower = ordered[lower_idx]
+    upper = ordered[upper_idx]
+    return float(lower + ((upper - lower) * (rank - lower_idx)))
 
 
 def normalize_ru_maxrss(ru_maxrss: int) -> int:
