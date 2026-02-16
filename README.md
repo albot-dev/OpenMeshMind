@@ -149,11 +149,17 @@ python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json
 
 Runtime/memory expectations and troubleshooting: `reports/low_end_smoke_path.md`.
 
-Run local generalist runtime (intent routing + retrieval + tool use + memory):
+Run local generalist runtime (intent routing + retrieval + tool use + memory management):
 
 ```bash
 python3 scripts/local_generalist_runtime.py --interactive
 ```
+
+Local runtime now supports:
+
+- note store/recall/list/forget flows
+- chained calculator commands (`... then ...`) and follow-ups using prior results (`multiply that by 3`)
+- retrieval responses with citations and prompt-level `top k` overrides
 
 Run generalist MVP evaluation gate:
 

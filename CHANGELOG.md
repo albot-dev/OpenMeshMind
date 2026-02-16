@@ -60,6 +60,12 @@ All notable changes to OpenMeshMind are documented here.
   - `tests/test_capture_machine_snapshot.py`
   - `tests/test_build_machine_comparison_report.py`
   - `tests/test_run_machine_reliability_drill.py`
+
+- Expanded local-only runtime capability in `scripts/local_generalist_runtime.py`:
+  - memory list/forget actions
+  - chained calculator workflows and follow-up math using prior results
+  - retrieval response citations with prompt-level top-k overrides
+- Added runtime behavior coverage for the new features in `tests/test_local_generalist_runtime.py`.
 - Updated user docs with snapshot capture/comparison commands:
   - `README.md`
   - `docs/NEXT_STEPS.md`
