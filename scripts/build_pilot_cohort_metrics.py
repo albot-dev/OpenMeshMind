@@ -9,6 +9,7 @@ import argparse
 import glob
 import json
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -44,6 +45,23 @@ def resolve(path_value: str) -> Path:
     if path.is_absolute():
         return path
     return ROOT / path
+
+
+def validate_metrics_file(metrics_path: Path, schema_path: str) -> None:
+    code, out = run_cmd(
+        [
+            sys.executable,
+            "scripts/check_pilot_metrics.py",
+            str(metrics_path),
+            "--schema",
+            schema_path,
+            "--expected-schema-version",
+            "1",
+        ]
+    )
+    if code != 0:
+        detail = out if out else "validation failed"
+        raise ValueError(f"invalid pilot metrics file {metrics_path}: {detail}")
 
 
 def _num(value: object, default: float = 0.0) -> float:
@@ -118,12 +136,13 @@ def node_summary(report: dict[str, object], source: str) -> dict[str, object]:
     }
 
 
-def load_reports(paths: list[Path]) -> tuple[list[dict[str, object]], list[str]]:
+def load_reports(paths: list[Path], schema_path: str) -> tuple[list[dict[str, object]], list[str]]:
     reports: list[dict[str, object]] = []
     loaded_sources: list[str] = []
     for path in paths:
         if not path.exists():
             continue
+        validate_metrics_file(metrics_path=path, schema_path=schema_path)
         with path.open("r", encoding="utf-8") as f:
             payload = json.load(f)
         reports.append(payload)
@@ -230,6 +249,11 @@ def main() -> int:
         help="Repository owner/name (default: inferred from origin remote).",
     )
     parser.add_argument(
+        "--schema",
+        default="schemas/pilot_metrics.schema.v1.json",
+        help="Path to pilot metrics schema JSON for per-node validation.",
+    )
+    parser.add_argument(
         "--json-out",
         default="pilot/pilot_cohort_metrics.json",
         help="Output cohort metrics JSON path.",
@@ -256,13 +280,27 @@ def main() -> int:
         seen.add(resolved)
         unique_paths.append(path)
 
-    reports, loaded_sources = load_reports(paths=unique_paths)
+    try:
+        reports, loaded_sources = load_reports(paths=unique_paths, schema_path=args.schema)
+    except ValueError as exc:
+        print(exc)
+        return 1
     if not reports:
         print("No pilot metrics files found. Provide --metrics or --metrics-glob.")
         return 1
 
     repo = args.repo or default_repo()
-    _, commit = run_cmd(["git", "rev-parse", "HEAD"])
+    if not repo:
+        print("Unable to resolve provenance repo. Set --repo or configure origin remote.")
+        return 1
+
+    commit_code, commit_out = run_cmd(["git", "rev-parse", "HEAD"])
+    commit = commit_out.strip()
+    if commit_code != 0 or not commit:
+        print("Unable to resolve git commit with 'git rev-parse HEAD'.")
+        if commit_out:
+            print(commit_out)
+        return 1
 
     payload = build_payload(
         node_reports=reports,

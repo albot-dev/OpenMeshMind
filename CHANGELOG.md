@@ -43,6 +43,16 @@ All notable changes to OpenMeshMind are documented here.
   - `scripts/check_mvp_readiness.py`
   - `scripts/smoke_check.py` (`mvp_readiness_check` strict step)
   - `tests/test_check_mvp_readiness.py`
+- Added stricter pilot/cohort ingestion and reporting hardening:
+  - `scripts/solo_multi_machine_mode.py` now validates imported bundle metrics with `scripts/check_pilot_metrics.py`
+  - `scripts/check_cohort_manifest.py` now validates manifest shape against `pilot/cohort_manifest.schema.v1.json`
+  - `scripts/build_pilot_cohort_metrics.py` now validates every input metrics file and fails if repo/commit provenance cannot be resolved
+  - `scripts/generate_pilot_status_report.py` now fails on unresolved template tokens, provenance-manifest generation failure, and missing expected bundle artifacts
+- Added dedicated tests for pilot/cohort hardening paths:
+  - `tests/test_build_pilot_cohort_metrics.py`
+  - `tests/test_generate_pilot_status_report.py`
+  - `tests/test_solo_multi_machine_mode.py` (invalid metrics bundle path)
+  - `tests/test_validation_scripts.py` (cohort schema additional-property rejection)
 
 ### Changed
 

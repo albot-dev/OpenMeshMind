@@ -1,6 +1,6 @@
 # Main Track Status
 
-- Generated: `2026-02-16T09:15:33.499228+00:00`
+- Generated: `2026-02-16T11:58:01.738535+00:00`
 - Require fairness: `True`
 - Require smoke summary: `True`
 - Completed goals: `4/4`
@@ -31,7 +31,7 @@
 - [x] Reduced benchmark gate passes (`done`, `required`, artifact=`benchmark_metrics.json`)
 - Detail: validation passed
 - [x] Smoke summary reports overall success (`done`, `required`, artifact=`smoke_summary.json`)
-- Detail: smoke_summary ok=true total_duration_sec=14.308808041969314
+- Detail: smoke_summary ok=true total_duration_sec=11.427998666011263
 
 ## Decentralization Fairness Resilience (done)
 

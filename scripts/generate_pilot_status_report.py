@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tarfile
@@ -15,6 +16,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+TOKEN_PATTERN = re.compile(r"\{\{[^{}]+\}\}")
 
 
 def resolve(path_value: str) -> Path:
@@ -175,18 +177,19 @@ def render_template(template: str, replacements: dict[str, str]) -> str:
 
 def bundle_artifacts(
     bundle_path: Path,
-    report_path: Path,
-    pilot_path: Path,
-    cohort_path: Path,
-    provenance_path: Path,
+    artifacts: list[Path],
 ) -> list[str]:
+    missing = [path for path in artifacts if not path.exists()]
+    if missing:
+        missing_text = ", ".join(str(path) for path in missing)
+        raise FileNotFoundError(f"missing expected artifact(s) for bundle: {missing_text}")
+
     added: list[str] = []
     with tarfile.open(bundle_path, "w:gz") as tar:
-        for path in [pilot_path, cohort_path, report_path, provenance_path]:
-            if path.exists():
-                arc = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else path.name
-                tar.add(path, arcname=arc)
-                added.append(arc)
+        for path in artifacts:
+            arc = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else path.name
+            tar.add(path, arcname=arc)
+            added.append(arc)
     return added
 
 
@@ -251,6 +254,12 @@ def main() -> int:
         reporting_window=args.reporting_window,
     )
     report = render_template(template=template, replacements=replacements)
+    unresolved = TOKEN_PATTERN.findall(report)
+    if unresolved:
+        print("Unresolved template token(s) found after rendering:")
+        for token in sorted(set(unresolved)):
+            print(f"- {token}")
+        return 1
 
     out_path = resolve(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -276,18 +285,25 @@ def main() -> int:
     if prov_out:
         print(prov_out)
     if prov_code != 0:
-        print("Warning: failed to generate pilot status provenance manifest.")
+        print("Failed to generate pilot status provenance manifest.")
+        return 1
 
     if args.bundle_out:
         bundle_path = resolve(args.bundle_out)
         bundle_path.parent.mkdir(parents=True, exist_ok=True)
-        added = bundle_artifacts(
-            bundle_path=bundle_path,
-            report_path=out_path,
-            pilot_path=pilot_path,
-            cohort_path=cohort_path,
-            provenance_path=provenance_path,
-        )
+        artifacts = [out_path, provenance_path]
+        if pilot_metrics is not None:
+            artifacts.append(pilot_path)
+        if cohort_metrics is not None:
+            artifacts.append(cohort_path)
+        try:
+            added = bundle_artifacts(
+                bundle_path=bundle_path,
+                artifacts=artifacts,
+            )
+        except FileNotFoundError as exc:
+            print(exc)
+            return 1
         print(f"Pilot artifact bundle written to: {bundle_path}")
         print(f"Bundled files: {len(added)}")
         for item in added:

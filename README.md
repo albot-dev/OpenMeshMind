@@ -257,6 +257,8 @@ python3 scripts/solo_multi_machine_mode.py \
   --require-metrics-files
 ```
 
+The solo import pipeline now validates each imported `pilot_metrics.json` against `schemas/pilot_metrics.schema.v1.json` and validates the cohort manifest against `pilot/cohort_manifest.schema.v1.json` before continuing.
+
 Provenance manifests are generated automatically:
 
 - `pilot/pilot_status_provenance.json`

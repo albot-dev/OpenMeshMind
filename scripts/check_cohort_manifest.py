@@ -24,6 +24,99 @@ def _is_integer(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
+def _is_number(value: object) -> bool:
+    return (isinstance(value, int) or isinstance(value, float)) and not isinstance(value, bool)
+
+
+def validate_against_schema(
+    payload: object,
+    schema: dict[str, object],
+    path: str,
+    failures: list[str],
+) -> None:
+    expected_type = schema.get("type")
+    if expected_type == "object":
+        if not isinstance(payload, dict):
+            failures.append(f"{path}: expected object")
+            return
+        required = schema.get("required", [])
+        for key in required:
+            if key not in payload:
+                failures.append(f"{path}.{key}: missing required field")
+
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            for key in payload:
+                if key not in properties:
+                    failures.append(f"{path}.{key}: unexpected field")
+
+        for key, child_schema in properties.items():
+            if key in payload:
+                validate_against_schema(
+                    payload=payload[key],
+                    schema=child_schema,
+                    path=f"{path}.{key}",
+                    failures=failures,
+                )
+        return
+
+    if expected_type == "array":
+        if not isinstance(payload, list):
+            failures.append(f"{path}: expected array")
+            return
+        min_items = schema.get("minItems")
+        if isinstance(min_items, int) and len(payload) < min_items:
+            failures.append(f"{path}: item count {len(payload)} < minItems {min_items}")
+        max_items = schema.get("maxItems")
+        if isinstance(max_items, int) and len(payload) > max_items:
+            failures.append(f"{path}: item count {len(payload)} > maxItems {max_items}")
+        items_schema = schema.get("items")
+        if isinstance(items_schema, dict):
+            for idx, item in enumerate(payload):
+                validate_against_schema(
+                    payload=item,
+                    schema=items_schema,
+                    path=f"{path}[{idx}]",
+                    failures=failures,
+                )
+        return
+
+    if expected_type == "string":
+        if not isinstance(payload, str):
+            failures.append(f"{path}: expected string")
+            return
+        min_length = schema.get("minLength")
+        if isinstance(min_length, int) and len(payload) < min_length:
+            failures.append(f"{path}: length {len(payload)} < minLength {min_length}")
+
+    elif expected_type == "boolean":
+        if not isinstance(payload, bool):
+            failures.append(f"{path}: expected boolean")
+            return
+
+    elif expected_type == "integer":
+        if not _is_integer(payload):
+            failures.append(f"{path}: expected integer")
+            return
+
+    elif expected_type == "number":
+        if not _is_number(payload):
+            failures.append(f"{path}: expected number")
+            return
+
+    const_value = schema.get("const")
+    if const_value is not None and payload != const_value:
+        failures.append(f"{path}: value {payload!r} != const {const_value!r}")
+
+    minimum = schema.get("minimum")
+    if isinstance(minimum, (int, float)) and _is_number(payload) and payload < minimum:
+        failures.append(f"{path}: value {payload} < minimum {minimum}")
+
+    maximum = schema.get("maximum")
+    if isinstance(maximum, (int, float)) and _is_number(payload) and payload > maximum:
+        failures.append(f"{path}: value {payload} > maximum {maximum}")
+
+
 def validate_node(node: dict[str, object], idx: int, failures: list[str]) -> None:
     required = [
         "node_id",
@@ -61,6 +154,11 @@ def validate_node(node: dict[str, object], idx: int, failures: list[str]) -> Non
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest_json", help="Path to cohort manifest JSON.")
+    parser.add_argument(
+        "--schema",
+        default="pilot/cohort_manifest.schema.v1.json",
+        help="Path to cohort manifest schema JSON.",
+    )
     parser.add_argument(
         "--expected-schema-version",
         type=int,
@@ -116,10 +214,14 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest_path = _resolve(args.manifest_json)
+    schema_path = _resolve(args.schema)
     with manifest_path.open("r", encoding="utf-8") as f:
         manifest = json.load(f)
+    with schema_path.open("r", encoding="utf-8") as f:
+        schema = json.load(f)
 
     failures: list[str] = []
+    validate_against_schema(payload=manifest, schema=schema, path="$", failures=failures)
 
     if manifest.get("schema_version") != args.expected_schema_version:
         failures.append(

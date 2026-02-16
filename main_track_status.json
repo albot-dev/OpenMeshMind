@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-02-16T09:15:33.499228+00:00",
+  "generated_utc": "2026-02-16T11:58:01.738535+00:00",
   "goals": [
     {
       "description": "Keep federated CPU baselines and adapter proxy quality stable with communication savings.",
@@ -72,7 +72,7 @@
         },
         {
           "artifact": "smoke_summary.json",
-          "detail": "smoke_summary ok=true total_duration_sec=14.308808041969314",
+          "detail": "smoke_summary ok=true total_duration_sec=11.427998666011263",
           "id": "sg2_smoke_ok",
           "required": true,
           "status": "done",

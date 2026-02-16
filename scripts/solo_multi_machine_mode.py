@@ -101,7 +101,23 @@ def read_member_json(tar: tarfile.TarFile, member: tarfile.TarInfo) -> dict[str,
     return json.loads(raw.decode("utf-8"))
 
 
-def import_bundle(bundle_path: Path, nodes_dir: Path) -> ImportedNode:
+def validate_metrics_file(metrics_path: Path, schema_path: str) -> None:
+    cmd = [
+        sys.executable,
+        "scripts/check_pilot_metrics.py",
+        str(metrics_path),
+        "--schema",
+        schema_path,
+        "--expected-schema-version",
+        "1",
+    ]
+    code, out = run_cmd(cmd)
+    if code != 0:
+        detail = out if out else "validation failed"
+        raise ValueError(f"invalid pilot_metrics.json for imported bundle: {detail}")
+
+
+def import_bundle(bundle_path: Path, nodes_dir: Path, metrics_schema: str) -> ImportedNode:
     with tarfile.open(bundle_path, "r:gz") as tar:
         members = tar.getmembers()
         metrics_member = select_member(members=members, suffix="pilot_metrics.json")
@@ -118,6 +134,7 @@ def import_bundle(bundle_path: Path, nodes_dir: Path) -> ImportedNode:
 
         metrics_path = node_dir / "pilot_metrics.json"
         metrics_path.write_bytes(read_member_bytes(tar=tar, member=metrics_member))
+        validate_metrics_file(metrics_path=metrics_path, schema_path=metrics_schema)
 
         optional_targets = {
             "node_state.json": "node_state.json",
@@ -265,6 +282,16 @@ def main() -> int:
         help="Path for onboarding summary JSON output.",
     )
     parser.add_argument(
+        "--pilot-metrics-schema",
+        default="schemas/pilot_metrics.schema.v1.json",
+        help="Path to pilot metrics schema used for imported bundle validation.",
+    )
+    parser.add_argument(
+        "--cohort-manifest-schema",
+        default="pilot/cohort_manifest.schema.v1.json",
+        help="Path to cohort manifest schema used by cohort validation.",
+    )
+    parser.add_argument(
         "--min-nodes",
         type=int,
         default=1,
@@ -321,7 +348,11 @@ def main() -> int:
     imported_nodes: list[ImportedNode] = []
     for bundle in bundle_paths:
         try:
-            imported = import_bundle(bundle_path=bundle, nodes_dir=nodes_dir)
+            imported = import_bundle(
+                bundle_path=bundle,
+                nodes_dir=nodes_dir,
+                metrics_schema=args.pilot_metrics_schema,
+            )
         except (ValueError, json.JSONDecodeError, tarfile.TarError) as exc:
             print(f"Failed to import bundle {bundle}: {exc}")
             return 1
@@ -361,6 +392,8 @@ def main() -> int:
         sys.executable,
         "scripts/check_cohort_manifest.py",
         str(manifest_path),
+        "--schema",
+        args.cohort_manifest_schema,
         "--min-nodes",
         str(args.min_nodes),
         "--min-passed",

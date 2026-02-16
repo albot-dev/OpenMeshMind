@@ -40,8 +40,18 @@ class SoloMultiMachineModeTests(unittest.TestCase):
 
             metrics_payload = {
                 "schema_version": 1,
-                "node": {"node_id": "node-a01", "mode": "reduced"},
-                "health": {"last_cycle_ok": True, "uptime_ratio_24h": 1.0},
+                "node": {
+                    "node_id": "node-a01",
+                    "mode": "reduced",
+                    "python_version": "3.10.10",
+                    "platform": "darwin",
+                },
+                "health": {
+                    "last_cycle_ok": True,
+                    "cycle_duration_sec": 8.0,
+                    "step_count": 8,
+                    "uptime_ratio_24h": 1.0,
+                },
                 "quality": {
                     "classification_accuracy": 0.9,
                     "classification_macro_f1": 0.9,
@@ -129,6 +139,75 @@ class SoloMultiMachineModeTests(unittest.TestCase):
             imported_metrics = nodes_dir / "node-a01" / "pilot_metrics.json"
             self.assertTrue(imported_metrics.exists())
             self.assertTrue(summary.exists())
+
+    def test_import_bundle_fails_for_invalid_metrics_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            bundle = tmp / "node_bad_onboarding.tgz"
+            manifest = tmp / "pilot" / "cohort_manifest.json"
+            nodes_dir = tmp / "pilot" / "nodes"
+            summary = tmp / "pilot" / "cohort_onboarding_summary.json"
+            manifest.parent.mkdir(parents=True, exist_ok=True)
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "cohort_id": "pilot-cohort-test",
+                        "generated_utc": "2026-02-14T00:00:00+00:00",
+                        "nodes": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            invalid_metrics_payload = {
+                "schema_version": 1,
+                "node": {"node_id": "node-bad01", "mode": "reduced"},
+            }
+            profile_payload = {
+                "schema_version": 1,
+                "node_id": "node-bad01",
+                "region": "us-east",
+                "hardware_tier": "mid",
+                "network_tier": "home-broadband",
+                "cpu_cores": 8,
+                "memory_gb": 16,
+            }
+
+            with tarfile.open(bundle, "w:gz") as tar:
+                for name, payload in {
+                    "pilot/nodes/node-bad01/pilot_metrics.json": invalid_metrics_payload,
+                    "pilot/nodes/node-bad01/node_profile.json": profile_payload,
+                }.items():
+                    raw = json.dumps(payload).encode("utf-8")
+                    info = tarfile.TarInfo(name=name)
+                    info.size = len(raw)
+                    tar.addfile(info, io.BytesIO(raw))
+
+            code, out = self._run_main(
+                [
+                    "solo_multi_machine_mode.py",
+                    "--bundle",
+                    str(bundle),
+                    "--bundles-glob",
+                    "",
+                    "--manifest",
+                    str(manifest),
+                    "--nodes-dir",
+                    str(nodes_dir),
+                    "--summary-json-out",
+                    str(summary),
+                    "--min-nodes",
+                    "1",
+                    "--min-passed",
+                    "1",
+                    "--require-metrics-files",
+                    "--no-pipeline",
+                ]
+            )
+            self.assertEqual(code, 1)
+            self.assertIn("Failed to import bundle", out)
+            self.assertIn("invalid pilot_metrics.json", out)
 
 
 if __name__ == "__main__":

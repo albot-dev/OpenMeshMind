@@ -351,6 +351,58 @@ class ValidationScriptTests(unittest.TestCase):
             self.assertEqual(code_pass, 0)
             self.assertIn("Validation passed.", out_pass)
 
+    def test_check_cohort_manifest_schema_rejects_unexpected_top_level_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            metrics = self._write_json(
+                tmp,
+                "node_metrics.json",
+                {
+                    "schema_version": 1,
+                    "node": {"node_id": "node-a"},
+                    "health": {"last_cycle_ok": True},
+                },
+            )
+            invalid = self._write_json(
+                tmp,
+                "cohort_unexpected_field.json",
+                {
+                    "schema_version": 1,
+                    "cohort_id": "pilot-cohort-test",
+                    "generated_utc": "2026-02-16T08:00:00+00:00",
+                    "unexpected": "not-allowed",
+                    "nodes": [
+                        {
+                            "node_id": "node-a",
+                            "region": "us-east",
+                            "hardware_tier": "mid",
+                            "cpu_cores": 8,
+                            "memory_gb": 16,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-16T08:00:00+00:00",
+                            "metrics_path": str(metrics),
+                            "failure_reason": "",
+                        }
+                    ],
+                },
+            )
+
+            code, out = self._run_main(
+                check_cohort_manifest.main,
+                [
+                    "check_cohort_manifest.py",
+                    str(invalid),
+                    "--min-nodes",
+                    "1",
+                    "--min-passed",
+                    "1",
+                ],
+            )
+            self.assertEqual(code, 1)
+            self.assertIn("Validation failed:", out)
+            self.assertIn("$.unexpected: unexpected field", out)
+
     def test_check_benchmarks_pass_and_fail_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
