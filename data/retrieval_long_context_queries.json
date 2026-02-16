@@ -1,0 +1,34 @@
+[
+  {
+    "query": "What should we use to reduce client drift when non-IID severity is high?",
+    "relevant_id": "lc_doc_01"
+  },
+  {
+    "query": "How do we keep rounds stable with heterogeneous bandwidth and slow nodes?",
+    "relevant_id": "lc_doc_02"
+  },
+  {
+    "query": "What secure aggregation controls cover key rotation and dropout-tolerant masks?",
+    "relevant_id": "lc_doc_03"
+  },
+  {
+    "query": "Which metrics matter for CPU deployment memory and latency discipline?",
+    "relevant_id": "lc_doc_04"
+  },
+  {
+    "query": "What governance artifacts are needed for transparent weekly execution?",
+    "relevant_id": "lc_doc_05"
+  },
+  {
+    "query": "What combination boosts communication efficiency beyond plain quantization?",
+    "relevant_id": "lc_doc_06"
+  },
+  {
+    "query": "Which readiness checks enforce diversity and unknown metadata limits?",
+    "relevant_id": "lc_doc_07"
+  },
+  {
+    "query": "What must long-window pilot reporting include for stability and provenance?",
+    "relevant_id": "lc_doc_08"
+  }
+]

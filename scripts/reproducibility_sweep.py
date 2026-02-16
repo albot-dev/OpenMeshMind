@@ -22,7 +22,12 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def run_seed(seed: int, top_k: int, include_distributed_reference: bool) -> dict[str, float]:
+def run_seed(
+    seed: int,
+    top_k: int,
+    long_context_top_k: int,
+    include_distributed_reference: bool,
+) -> dict[str, float]:
     with tempfile.TemporaryDirectory() as tmpdir:
         out = Path(tmpdir) / f"generality_seed_{seed}.json"
         cmd = [
@@ -32,6 +37,8 @@ def run_seed(seed: int, top_k: int, include_distributed_reference: bool) -> dict
             str(seed),
             "--top-k",
             str(top_k),
+            "--long-context-top-k",
+            str(long_context_top_k),
             "--json-out",
             str(out),
             "--quiet",
@@ -61,9 +68,15 @@ def run_seed(seed: int, top_k: int, include_distributed_reference: bool) -> dict
         "classification_macro_f1": float(tasks["classification"]["metrics"]["macro_f1"]),
         "retrieval_recall_at_1": float(tasks["retrieval"]["metrics"]["recall_at_1"]),
         "retrieval_mrr": float(tasks["retrieval"]["metrics"]["mrr"]),
+        "long_context_recall_at_1": float(tasks["long_context_retrieval"]["metrics"]["recall_at_1"]),
+        "long_context_mrr": float(tasks["long_context_retrieval"]["metrics"]["mrr"]),
         "instruction_pass_rate": float(tasks["instruction_following"]["metrics"]["pass_rate"]),
         "conversation_pass_rate": float(tasks["conversation_continuity"]["metrics"]["pass_rate"]),
         "tool_pass_rate": float(tasks["tool_use"]["metrics"]["pass_rate"]),
+        "multi_step_tool_pass_rate": float(tasks["multi_step_tool_use"]["metrics"]["pass_rate"]),
+        "multi_step_tool_chain_pass_rate": float(
+            tasks["multi_step_tool_use"]["metrics"]["chain_pass_rate"]
+        ),
     }
     distributed = tasks.get("distributed_reference")
     if distributed:
@@ -96,9 +109,13 @@ def summarize_runs(runs: list[dict[str, float]]) -> dict[str, object]:
         "classification_macro_f1",
         "retrieval_recall_at_1",
         "retrieval_mrr",
+        "long_context_recall_at_1",
+        "long_context_mrr",
         "instruction_pass_rate",
         "conversation_pass_rate",
         "tool_pass_rate",
+        "multi_step_tool_pass_rate",
+        "multi_step_tool_chain_pass_rate",
     ]
     summary = {key: summarize_metric([float(run[key]) for run in runs]) for key in keys}
     if runs and "int8_accuracy_drop" in runs[0]:
@@ -138,6 +155,13 @@ def print_summary(report: dict[str, object]) -> None:
         f" conversation_mean={summary['conversation_pass_rate']['mean']:.4f},"
         f" tool_mean={summary['tool_pass_rate']['mean']:.4f}"
     )
+    print(
+        "long-context/multi-step:"
+        f" long_context_r1_mean={summary['long_context_recall_at_1']['mean']:.4f},"
+        f" long_context_mrr_mean={summary['long_context_mrr']['mean']:.4f},"
+        f" multi_step_tool_mean={summary['multi_step_tool_pass_rate']['mean']:.4f},"
+        f" multi_step_chain_mean={summary['multi_step_tool_chain_pass_rate']['mean']:.4f}"
+    )
     if "int8_accuracy_drop" in summary:
         print(
             "distributed int8:"
@@ -166,6 +190,12 @@ def main() -> int:
         help="Retrieval top-k value passed to evaluate_generality.",
     )
     parser.add_argument(
+        "--long-context-top-k",
+        type=int,
+        default=3,
+        help="Long-context retrieval top-k value passed to evaluate_generality.",
+    )
+    parser.add_argument(
         "--skip-distributed-reference",
         action="store_true",
         help="Skip distributed reference task in each run.",
@@ -191,6 +221,7 @@ def main() -> int:
         run_seed(
             seed=seed,
             top_k=args.top_k,
+            long_context_top_k=args.long_context_top_k,
             include_distributed_reference=not args.skip_distributed_reference,
         )
         for seed in seeds
@@ -202,6 +233,7 @@ def main() -> int:
         "config": {
             "seeds": seeds,
             "top_k": args.top_k,
+            "long_context_top_k": args.long_context_top_k,
             "include_distributed_reference": not args.skip_distributed_reference,
         },
         "runs": runs,

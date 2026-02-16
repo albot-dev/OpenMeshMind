@@ -28,9 +28,11 @@ class EvaluateGeneralityTests(unittest.TestCase):
             self.assertEqual(payload["schema_version"], 1)
             self.assertIn("classification", payload["tasks"])
             self.assertIn("retrieval", payload["tasks"])
+            self.assertIn("long_context_retrieval", payload["tasks"])
             self.assertIn("instruction_following", payload["tasks"])
             self.assertIn("conversation_continuity", payload["tasks"])
             self.assertIn("tool_use", payload["tasks"])
+            self.assertIn("multi_step_tool_use", payload["tasks"])
             self.assertNotIn("distributed_reference", payload["tasks"])
             self.assertGreaterEqual(payload["aggregate"]["overall_score"], 0.5)
 

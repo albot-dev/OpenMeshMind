@@ -5,11 +5,10 @@ This plan continues from the completed MVP, pilot execution, and provenance mile
 ## Current State (2026-02-16)
 
 - Main-track goals complete: `4/4` (`main_track_status.json`)
-- Open issues: `0`
-- Open milestones: `0`
 - Weekly and pilot provenance manifests are generated and validated.
+- External cohort intake remains open, but currently depends on outside participants.
 
-## Phase N1: External Cohort Readiness Hardening (Can do now)
+## Phase N1: External Cohort Readiness Hardening (Completed)
 
 Goal: tighten validation before wider external volunteer intake.
 
@@ -24,6 +23,10 @@ Exit criteria:
 - `scripts/check_cohort_manifest.py` supports diversity constraints.
 - Tests cover pass/fail diversity scenarios.
 - Docs show strict-check command examples.
+
+Status:
+
+- Completed.
 
 ## Phase N2: External Cohort Intake (Needs external participants)
 
@@ -40,7 +43,7 @@ Exit criteria:
 - `pilot/cohort_manifest.json` contains >=5 externally sourced passed nodes.
 - `reports/pilot_status.md` and `reports/pilot_14_day_report.md` regenerated from external cohort artifacts.
 
-## Phase N3: Capability Expansion on Commodity Hardware (Can do now)
+## Phase N3: Capability Expansion on Commodity Hardware (Completed)
 
 Goal: increase task breadth while keeping CPU-first reproducibility.
 
@@ -55,8 +58,27 @@ Exit criteria:
 - New task families are included in `scripts/evaluate_generality.py` and validated by checkers.
 - Tests and smoke path remain fully passing.
 
+Status:
+
+- Completed with long-context retrieval and multi-step tool-use tasks.
+
+## Phase N4: Solo Multi-Machine Reliability Hardening (Can do now)
+
+Goal: increase confidence in single-operator, multi-machine reproducibility while external cohort intake is pending.
+
+Sub-goals:
+
+- Run repeated multi-seed sweeps on multiple personal machines and compare variance.
+- Add failure-injection checks (simulated slow/late nodes, partial artifact loss, resume flow).
+- Publish a machine-comparison report with pass/fail gate evidence.
+
+Exit criteria:
+
+- At least 3 machine snapshots in a shared schema pass current generality + reproducibility gates.
+- A repeatable replay script reproduces the comparison report from raw artifacts.
+
 ## Immediate execution order
 
-1. Complete N1 hardening (in progress now).
-2. Start N3 task expansion after N1 merges green.
-3. Trigger N2 when external submissions are available.
+1. Execute N4 reliability hardening and publish machine-comparison artifacts.
+2. Keep N2 intake open for external contributors as data arrives.
+3. Regenerate pilot reports when N2 reaches the required external cohort size.

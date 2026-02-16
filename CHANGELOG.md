@@ -14,6 +14,27 @@ All notable changes to OpenMeshMind are documented here.
 - Added validation coverage for cohort diversity pass/fail paths in `tests/test_validation_scripts.py`.
 - Added forward execution plan: `docs/NEXT_STEPS.md`.
 - Extended roadmap with post-MVP externalization/capability-expansion phase in `ROADMAP.md`.
+- Added long-context retrieval task family to generality/reproducibility gates:
+  - `data/retrieval_long_context_corpus.json`
+  - `data/retrieval_long_context_queries.json`
+  - `scripts/evaluate_generality.py`
+  - `scripts/check_generality.py`
+  - `scripts/reproducibility_sweep.py`
+  - `scripts/check_reproducibility.py`
+- Added multi-step tool-chain task family to generality/reproducibility gates:
+  - `scripts/evaluate_generality.py`
+  - `scripts/check_generality.py`
+  - `scripts/reproducibility_sweep.py`
+  - `scripts/check_reproducibility.py`
+- Added/updated tests for the expanded task families and validator thresholds:
+  - `tests/test_evaluate_generality.py`
+  - `tests/test_reproducibility_sweep.py`
+  - `tests/test_validation_scripts.py`
+- Updated docs for expanded MVP gate scope and thresholds:
+  - `README.md`
+  - `docs/MVP_CRITERIA.md`
+  - `docs/NEXT_STEPS.md`
+  - `ROADMAP.md`
 
 ## 2026-02-15
 

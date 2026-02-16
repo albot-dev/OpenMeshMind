@@ -44,8 +44,11 @@
 - Enforce generality gate with explicit thresholds:
   - classification
   - retrieval
+  - long-context retrieval
   - instruction-following compliance
+  - conversation continuity
   - tool-use correctness
+  - multi-step tool-use chains
   - centralized vs federated reference deltas
 - Enforce multi-seed reproducibility sweeps on generality metrics.
 - Produce machine-readable gate artifacts:

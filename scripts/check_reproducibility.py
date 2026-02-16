@@ -23,9 +23,13 @@ def main() -> int:
     parser.add_argument("--max-overall-score-std", type=float, default=0.10)
     parser.add_argument("--min-classification-accuracy-mean", type=float, default=0.80)
     parser.add_argument("--min-retrieval-recall-at-1-mean", type=float, default=0.60)
+    parser.add_argument("--min-long-context-recall-at-1-mean", type=float, default=0.70)
+    parser.add_argument("--min-long-context-mrr-mean", type=float, default=0.80)
     parser.add_argument("--min-instruction-pass-rate-mean", type=float, default=0.70)
     parser.add_argument("--min-conversation-pass-rate-mean", type=float, default=0.75)
     parser.add_argument("--min-tool-pass-rate-mean", type=float, default=0.80)
+    parser.add_argument("--min-multi-step-tool-pass-rate-mean", type=float, default=0.80)
+    parser.add_argument("--min-multi-step-tool-chain-pass-rate-mean", type=float, default=0.66)
     parser.add_argument("--max-int8-accuracy-drop-mean", type=float, default=0.10)
     parser.add_argument("--min-int8-comm-savings-mean", type=float, default=40.0)
     parser.add_argument("--max-adapter-int8-accuracy-drop-mean", type=float, default=0.12)
@@ -50,17 +54,25 @@ def main() -> int:
     overall = summary.get("overall_score", {})
     cls_acc = summary.get("classification_accuracy", {})
     ret = summary.get("retrieval_recall_at_1", {})
+    long_ret = summary.get("long_context_recall_at_1", {})
+    long_mrr = summary.get("long_context_mrr", {})
     ins = summary.get("instruction_pass_rate", {})
     conv = summary.get("conversation_pass_rate", {})
     tool = summary.get("tool_pass_rate", {})
+    multi_tool = summary.get("multi_step_tool_pass_rate", {})
+    multi_tool_chain = summary.get("multi_step_tool_chain_pass_rate", {})
 
     overall_mean = float(overall.get("mean", 0.0))
     overall_std = float(overall.get("std", 0.0))
     cls_mean = float(cls_acc.get("mean", 0.0))
     ret_mean = float(ret.get("mean", 0.0))
+    long_ret_mean = float(long_ret.get("mean", 0.0))
+    long_mrr_mean = float(long_mrr.get("mean", 0.0))
     ins_mean = float(ins.get("mean", 0.0))
     conv_mean = float(conv.get("mean", 0.0))
     tool_mean = float(tool.get("mean", 0.0))
+    multi_tool_mean = float(multi_tool.get("mean", 0.0))
+    multi_tool_chain_mean = float(multi_tool_chain.get("mean", 0.0))
 
     if overall_mean < args.min_overall_score_mean:
         failures.append(
@@ -76,6 +88,15 @@ def main() -> int:
         failures.append(
             f"retrieval_recall@1 mean {ret_mean:.4f} < {args.min_retrieval_recall_at_1_mean:.4f}"
         )
+    if long_ret_mean < args.min_long_context_recall_at_1_mean:
+        failures.append(
+            "long_context_recall@1 mean "
+            f"{long_ret_mean:.4f} < {args.min_long_context_recall_at_1_mean:.4f}"
+        )
+    if long_mrr_mean < args.min_long_context_mrr_mean:
+        failures.append(
+            f"long_context_mrr mean {long_mrr_mean:.4f} < {args.min_long_context_mrr_mean:.4f}"
+        )
     if ins_mean < args.min_instruction_pass_rate_mean:
         failures.append(
             f"instruction_pass_rate mean {ins_mean:.4f} < {args.min_instruction_pass_rate_mean:.4f}"
@@ -86,6 +107,16 @@ def main() -> int:
         )
     if tool_mean < args.min_tool_pass_rate_mean:
         failures.append(f"tool_pass_rate mean {tool_mean:.4f} < {args.min_tool_pass_rate_mean:.4f}")
+    if multi_tool_mean < args.min_multi_step_tool_pass_rate_mean:
+        failures.append(
+            "multi_step_tool_pass_rate mean "
+            f"{multi_tool_mean:.4f} < {args.min_multi_step_tool_pass_rate_mean:.4f}"
+        )
+    if multi_tool_chain_mean < args.min_multi_step_tool_chain_pass_rate_mean:
+        failures.append(
+            "multi_step_tool_chain_pass_rate mean "
+            f"{multi_tool_chain_mean:.4f} < {args.min_multi_step_tool_chain_pass_rate_mean:.4f}"
+        )
 
     if "int8_accuracy_drop" in summary:
         int8_drop_mean = float(summary["int8_accuracy_drop"].get("mean", 0.0))
@@ -120,9 +151,13 @@ def main() -> int:
     print(f"- overall score mean/std: {overall_mean:.4f}/{overall_std:.4f}")
     print(f"- classification accuracy mean: {cls_mean:.4f}")
     print(f"- retrieval recall@1 mean: {ret_mean:.4f}")
+    print(f"- long-context recall@1 mean: {long_ret_mean:.4f}")
+    print(f"- long-context mrr mean: {long_mrr_mean:.4f}")
     print(f"- instruction pass mean: {ins_mean:.4f}")
     print(f"- conversation pass mean: {conv_mean:.4f}")
     print(f"- tool pass mean: {tool_mean:.4f}")
+    print(f"- multi-step tool pass mean: {multi_tool_mean:.4f}")
+    print(f"- multi-step tool chain pass mean: {multi_tool_chain_mean:.4f}")
     if "int8_accuracy_drop" in summary:
         print(f"- int8 drop mean: {summary['int8_accuracy_drop'].get('mean'):.4f}")
         print(f"- int8 comm savings mean: {summary['int8_comm_savings_percent'].get('mean'):.2f}%")

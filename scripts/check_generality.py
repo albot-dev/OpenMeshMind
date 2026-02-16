@@ -22,9 +22,13 @@ def main() -> int:
     parser.add_argument("--min-classification-f1", type=float, default=0.78)
     parser.add_argument("--min-retrieval-recall-at-1", type=float, default=0.60)
     parser.add_argument("--min-retrieval-mrr", type=float, default=0.75)
+    parser.add_argument("--min-long-context-recall-at-1", type=float, default=0.70)
+    parser.add_argument("--min-long-context-mrr", type=float, default=0.80)
     parser.add_argument("--min-instruction-pass-rate", type=float, default=0.75)
     parser.add_argument("--min-conversation-pass-rate", type=float, default=0.80)
     parser.add_argument("--min-tool-pass-rate", type=float, default=0.80)
+    parser.add_argument("--min-multi-step-tool-pass-rate", type=float, default=0.80)
+    parser.add_argument("--min-multi-step-tool-chain-pass-rate", type=float, default=0.66)
     parser.add_argument("--min-overall-score", type=float, default=0.75)
     parser.add_argument("--max-total-runtime-sec", type=float, default=180.0)
     parser.add_argument("--max-int8-accuracy-drop", type=float, default=0.10)
@@ -44,7 +48,15 @@ def main() -> int:
         )
 
     tasks = report.get("tasks", {})
-    required = ["classification", "retrieval", "instruction_following", "conversation_continuity", "tool_use"]
+    required = [
+        "classification",
+        "retrieval",
+        "long_context_retrieval",
+        "instruction_following",
+        "conversation_continuity",
+        "tool_use",
+        "multi_step_tool_use",
+    ]
     for name in required:
         if name not in tasks:
             failures.append(f"missing task section: {name}")
@@ -58,9 +70,11 @@ def main() -> int:
 
     cls = tasks["classification"]["metrics"]
     ret = tasks["retrieval"]["metrics"]
+    long_ret = tasks["long_context_retrieval"]["metrics"]
     ins = tasks["instruction_following"]["metrics"]
     conv = tasks["conversation_continuity"]["metrics"]
     tool = tasks["tool_use"]["metrics"]
+    multi_tool = tasks["multi_step_tool_use"]["metrics"]
     aggregate = report.get("aggregate", {})
     resources = report.get("resources", {})
 
@@ -76,6 +90,15 @@ def main() -> int:
         )
     if ret["mrr"] < args.min_retrieval_mrr:
         failures.append(f"retrieval mrr {ret['mrr']:.4f} < {args.min_retrieval_mrr:.4f}")
+    if long_ret["recall_at_1"] < args.min_long_context_recall_at_1:
+        failures.append(
+            "long_context_retrieval recall@1 "
+            f"{long_ret['recall_at_1']:.4f} < {args.min_long_context_recall_at_1:.4f}"
+        )
+    if long_ret["mrr"] < args.min_long_context_mrr:
+        failures.append(
+            f"long_context_retrieval mrr {long_ret['mrr']:.4f} < {args.min_long_context_mrr:.4f}"
+        )
     if ins["pass_rate"] < args.min_instruction_pass_rate:
         failures.append(
             f"instruction pass_rate {ins['pass_rate']:.4f} < {args.min_instruction_pass_rate:.4f}"
@@ -86,6 +109,16 @@ def main() -> int:
         )
     if tool["pass_rate"] < args.min_tool_pass_rate:
         failures.append(f"tool pass_rate {tool['pass_rate']:.4f} < {args.min_tool_pass_rate:.4f}")
+    if multi_tool["pass_rate"] < args.min_multi_step_tool_pass_rate:
+        failures.append(
+            "multi_step_tool pass_rate "
+            f"{multi_tool['pass_rate']:.4f} < {args.min_multi_step_tool_pass_rate:.4f}"
+        )
+    if multi_tool["chain_pass_rate"] < args.min_multi_step_tool_chain_pass_rate:
+        failures.append(
+            "multi_step_tool chain_pass_rate "
+            f"{multi_tool['chain_pass_rate']:.4f} < {args.min_multi_step_tool_chain_pass_rate:.4f}"
+        )
 
     overall = aggregate.get("overall_score", 0.0)
     if overall < args.min_overall_score:
@@ -132,9 +165,13 @@ def main() -> int:
     print(f"- classification macro_f1: {cls['macro_f1']:.4f}")
     print(f"- retrieval recall@1: {ret['recall_at_1']:.4f}")
     print(f"- retrieval mrr: {ret['mrr']:.4f}")
+    print(f"- long-context retrieval recall@1: {long_ret['recall_at_1']:.4f}")
+    print(f"- long-context retrieval mrr: {long_ret['mrr']:.4f}")
     print(f"- instruction pass_rate: {ins['pass_rate']:.4f}")
     print(f"- conversation pass_rate: {conv['pass_rate']:.4f}")
     print(f"- tool pass_rate: {tool['pass_rate']:.4f}")
+    print(f"- multi-step tool pass_rate: {multi_tool['pass_rate']:.4f}")
+    print(f"- multi-step tool chain_pass_rate: {multi_tool['chain_pass_rate']:.4f}")
     print(f"- overall score: {overall:.4f}")
     print(f"- total runtime: {runtime_total:.2f}s")
     if distributed is not None:

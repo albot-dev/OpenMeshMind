@@ -122,6 +122,8 @@ Retrieval dataset files:
 
 - `data/retrieval_corpus.json`
 - `data/retrieval_queries.json`
+- `data/retrieval_long_context_corpus.json`
+- `data/retrieval_long_context_queries.json`
 
 Example retrieval summary: `reports/local_retrieval_baseline.md`.
 
@@ -162,7 +164,7 @@ python3 scripts/reproducibility_sweep.py --seeds 7,17,27 --json-out reproducibil
 python3 scripts/check_reproducibility.py reproducibility_metrics.json
 ```
 
-The generality and reproducibility gates include multi-turn conversation continuity checks plus distributed FedAvg and adapter-reference communication/quality checks.
+The generality and reproducibility gates include long-context retrieval checks, multi-turn conversation continuity, multi-step tool chains, plus distributed FedAvg and adapter-reference communication/quality checks.
 
 MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
 

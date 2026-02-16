@@ -1,0 +1,34 @@
+[
+  {
+    "id": "lc_doc_01",
+    "text": "Client drift in federated optimization can be reduced with proximal regularization and periodic full-precision anchor rounds when non-IID severity is high."
+  },
+  {
+    "id": "lc_doc_02",
+    "text": "Deadline-aware client scheduling should prioritize stragglers with compressed updates so round completion remains stable under heterogeneous bandwidth."
+  },
+  {
+    "id": "lc_doc_03",
+    "text": "Secure aggregation deployment needs key-rotation cadence, dropout-tolerant mask cancellation, and auditable incident response when aggregation windows fail."
+  },
+  {
+    "id": "lc_doc_04",
+    "text": "Commodity CPU deployment benefits from bounded heap growth, deterministic inference latency targets, and explicit peak RSS reporting in every benchmark run."
+  },
+  {
+    "id": "lc_doc_05",
+    "text": "Open governance cadence requires public decision logs, reproducible weekly artifacts, and contributor-facing milestone issue triage with ownership tags."
+  },
+  {
+    "id": "lc_doc_06",
+    "text": "Communication efficiency improves when int8 quantization is paired with error feedback buffers, sparse top-k filtering, and periodic dense correction rounds."
+  },
+  {
+    "id": "lc_doc_07",
+    "text": "Cohort readiness checks should enforce region diversity, hardware tier diversity, network tier diversity, and caps on unknown metadata fields."
+  },
+  {
+    "id": "lc_doc_08",
+    "text": "Long-window pilot reporting must include uptime trends, fairness deltas, quality stability bands, communication savings, and checksum-backed provenance manifests."
+  }
+]

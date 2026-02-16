@@ -5,8 +5,10 @@ Evaluate local generalist MVP readiness on commodity hardware.
 Task families:
 - classification quality (local CPU baseline)
 - retrieval quality (local corpus lookup)
+- long-context retrieval quality (harder corpus/query set)
 - instruction following (runtime action compliance)
 - tool use (runtime calculator correctness)
+- multi-step tool use (chained deterministic calculations)
 
 Optional:
 - distributed reference comparison (centralized vs federated int8/sparse)
@@ -100,6 +102,38 @@ def evaluate_retrieval(top_k: int) -> dict[str, object]:
             "latency_p95_ms": metrics["latency_p95_ms"],
         },
         "counts": report["counts"],
+        "score": (metrics["recall_at_1"] + metrics["mrr"]) / 2.0,
+    }
+
+
+def evaluate_long_context_retrieval(
+    top_k: int,
+    corpus_path: str,
+    queries_path: str,
+) -> dict[str, object]:
+    start = time.perf_counter()
+    report = retrieval.run_retrieval(
+        corpus_path=corpus_path,
+        queries_path=queries_path,
+        top_k=top_k,
+    )
+    runtime = time.perf_counter() - start
+    metrics = report["metrics"]
+    return {
+        "runtime_sec": runtime,
+        "metrics": {
+            "recall_at_1": metrics["recall_at_1"],
+            "recall_at_k": metrics["recall_at_k"],
+            "mrr": metrics["mrr"],
+            "latency_mean_ms": metrics["latency_mean_ms"],
+            "latency_p95_ms": metrics["latency_p95_ms"],
+        },
+        "counts": report["counts"],
+        "config": {
+            "corpus_path": corpus_path,
+            "queries_path": queries_path,
+            "top_k": top_k,
+        },
         "score": (metrics["recall_at_1"] + metrics["mrr"]) / 2.0,
     }
 
@@ -290,6 +324,99 @@ def evaluate_tool_use(runtime: LocalGeneralistRuntime) -> dict[str, object]:
     }
 
 
+def evaluate_multi_step_tool_use(runtime: LocalGeneralistRuntime) -> dict[str, object]:
+    chains = [
+        {
+            "id": "chain_a",
+            "steps": [
+                {"prompt": "Calculate (18 + 6) * 2", "expected": "48"},
+                {"prompt": "Compute {prev} / 3", "expected": "16"},
+                {"prompt": "Evaluate {prev} + 5", "expected": "21"},
+            ],
+        },
+        {
+            "id": "chain_b",
+            "steps": [
+                {"prompt": "What is 9 * 7", "expected": "63"},
+                {"prompt": "Calculate {prev} - 18", "expected": "45"},
+                {"prompt": "Compute {prev} / 9", "expected": "5"},
+            ],
+        },
+        {
+            "id": "chain_c",
+            "steps": [
+                {"prompt": "Evaluate 14 + 11", "expected": "25"},
+                {"prompt": "Compute {prev} * 4", "expected": "100"},
+                {"prompt": "Calculate {prev} - 37", "expected": "63"},
+            ],
+        },
+    ]
+
+    total_steps = 0
+    passed_steps = 0
+    passed_chains = 0
+    latencies: list[float] = []
+    details: list[dict[str, object]] = []
+    start = time.perf_counter()
+
+    for chain in chains:
+        prev = ""
+        chain_ok = True
+        chain_steps: list[dict[str, object]] = []
+        for step in chain["steps"]:
+            prompt = step["prompt"].format(prev=prev)
+            result = runtime.respond(prompt)
+            answer = str(result["answer"]).strip()
+            ok = answer == step["expected"]
+            total_steps += 1
+            if ok:
+                passed_steps += 1
+            else:
+                chain_ok = False
+            latencies.append(float(result["latency_ms"]))
+            chain_steps.append(
+                {
+                    "prompt": prompt,
+                    "expected": step["expected"],
+                    "answer": answer,
+                    "ok": ok,
+                    "latency_ms": result["latency_ms"],
+                }
+            )
+            prev = answer
+
+        if chain_ok:
+            passed_chains += 1
+        details.append(
+            {
+                "id": chain["id"],
+                "ok": chain_ok,
+                "steps": chain_steps,
+            }
+        )
+
+    runtime_sec = time.perf_counter() - start
+    pass_rate = passed_steps / total_steps if total_steps else 0.0
+    chain_pass_rate = passed_chains / len(chains) if chains else 0.0
+    return {
+        "runtime_sec": runtime_sec,
+        "counts": {
+            "chains": len(chains),
+            "chains_passed": passed_chains,
+            "steps": total_steps,
+            "steps_passed": passed_steps,
+        },
+        "metrics": {
+            "pass_rate": pass_rate,
+            "chain_pass_rate": chain_pass_rate,
+            "latency_mean_ms": statistics.mean(latencies),
+            "latency_p95_ms": p95(latencies),
+        },
+        "score": (pass_rate + chain_pass_rate) / 2.0,
+        "details": details,
+    }
+
+
 def evaluate_distributed_reference(seed: int) -> dict[str, object]:
     # Reduced configuration to keep this executable on commodity CPUs.
     start = time.perf_counter()
@@ -394,14 +521,22 @@ def summarize(report: dict[str, object]) -> None:
 
     cls = report["tasks"]["classification"]["metrics"]
     ret = report["tasks"]["retrieval"]["metrics"]
+    long_ret = report["tasks"]["long_context_retrieval"]["metrics"]
     ins = report["tasks"]["instruction_following"]["metrics"]
     conv = report["tasks"]["conversation_continuity"]["metrics"]
     tool = report["tasks"]["tool_use"]["metrics"]
+    multi_tool = report["tasks"]["multi_step_tool_use"]["metrics"]
     print(f"classification: acc={cls['accuracy']:.4f}, f1={cls['macro_f1']:.4f}")
     print(f"retrieval: r@1={ret['recall_at_1']:.4f}, mrr={ret['mrr']:.4f}")
+    print(f"long_context_retrieval: r@1={long_ret['recall_at_1']:.4f}, mrr={long_ret['mrr']:.4f}")
     print(f"instruction: pass_rate={ins['pass_rate']:.4f}")
     print(f"conversation: pass_rate={conv['pass_rate']:.4f}")
     print(f"tool_use: pass_rate={tool['pass_rate']:.4f}")
+    print(
+        "multi_step_tool_use: "
+        f"step_pass_rate={multi_tool['pass_rate']:.4f}, "
+        f"chain_pass_rate={multi_tool['chain_pass_rate']:.4f}"
+    )
     if "distributed_reference" in report["tasks"]:
         dist = report["tasks"]["distributed_reference"]["metrics"]
         print(
@@ -443,6 +578,22 @@ def main() -> int:
         help="Retrieval top-k for retrieval task.",
     )
     parser.add_argument(
+        "--long-context-top-k",
+        type=int,
+        default=3,
+        help="Retrieval top-k for long-context retrieval task.",
+    )
+    parser.add_argument(
+        "--long-context-corpus",
+        default="data/retrieval_long_context_corpus.json",
+        help="Path to long-context retrieval corpus JSON.",
+    )
+    parser.add_argument(
+        "--long-context-queries",
+        default="data/retrieval_long_context_queries.json",
+        help="Path to long-context retrieval query JSON.",
+    )
+    parser.add_argument(
         "--skip-distributed-reference",
         action="store_true",
         help="Skip centralized vs federated comparison task.",
@@ -469,9 +620,15 @@ def main() -> int:
     tasks: dict[str, dict[str, object]] = {
         "classification": evaluate_classification(seed=args.seed),
         "retrieval": evaluate_retrieval(top_k=args.top_k),
+        "long_context_retrieval": evaluate_long_context_retrieval(
+            top_k=args.long_context_top_k,
+            corpus_path=args.long_context_corpus,
+            queries_path=args.long_context_queries,
+        ),
         "instruction_following": evaluate_instruction_following(runtime=runtime),
         "conversation_continuity": evaluate_conversation_continuity(runtime=runtime),
         "tool_use": evaluate_tool_use(runtime=runtime),
+        "multi_step_tool_use": evaluate_multi_step_tool_use(runtime=runtime),
     }
     if not args.skip_distributed_reference:
         tasks["distributed_reference"] = evaluate_distributed_reference(seed=args.seed)
@@ -484,6 +641,9 @@ def main() -> int:
         "config": {
             "seed": args.seed,
             "top_k": args.top_k,
+            "long_context_top_k": args.long_context_top_k,
+            "long_context_corpus": args.long_context_corpus,
+            "long_context_queries": args.long_context_queries,
             "include_distributed_reference": not args.skip_distributed_reference,
             "include_adapter_reference": not args.skip_adapter_reference,
         },

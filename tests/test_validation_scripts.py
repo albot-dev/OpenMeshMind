@@ -466,6 +466,12 @@ class ValidationScriptTests(unittest.TestCase):
                                 "mrr": 0.86,
                             }
                         },
+                        "long_context_retrieval": {
+                            "metrics": {
+                                "recall_at_1": 0.88,
+                                "mrr": 0.90,
+                            }
+                        },
                         "instruction_following": {
                             "metrics": {
                                 "pass_rate": 0.90,
@@ -479,6 +485,12 @@ class ValidationScriptTests(unittest.TestCase):
                         "tool_use": {
                             "metrics": {
                                 "pass_rate": 1.00,
+                            }
+                        },
+                        "multi_step_tool_use": {
+                            "metrics": {
+                                "pass_rate": 0.89,
+                                "chain_pass_rate": 0.80,
                             }
                         },
                         "distributed_reference": {
@@ -516,6 +528,12 @@ class ValidationScriptTests(unittest.TestCase):
                                 "mrr": 0.55,
                             }
                         },
+                        "long_context_retrieval": {
+                            "metrics": {
+                                "recall_at_1": 0.45,
+                                "mrr": 0.50,
+                            }
+                        },
                         "instruction_following": {
                             "metrics": {
                                 "pass_rate": 0.50,
@@ -529,6 +547,12 @@ class ValidationScriptTests(unittest.TestCase):
                         "tool_use": {
                             "metrics": {
                                 "pass_rate": 0.40,
+                            }
+                        },
+                        "multi_step_tool_use": {
+                            "metrics": {
+                                "pass_rate": 0.40,
+                                "chain_pass_rate": 0.30,
                             }
                         },
                         "distributed_reference": {
@@ -580,9 +604,13 @@ class ValidationScriptTests(unittest.TestCase):
                         "overall_score": {"mean": 0.86, "std": 0.03},
                         "classification_accuracy": {"mean": 0.92},
                         "retrieval_recall_at_1": {"mean": 0.82},
+                        "long_context_recall_at_1": {"mean": 0.84},
+                        "long_context_mrr": {"mean": 0.87},
                         "instruction_pass_rate": {"mean": 0.80},
                         "conversation_pass_rate": {"mean": 0.84},
                         "tool_pass_rate": {"mean": 0.95},
+                        "multi_step_tool_pass_rate": {"mean": 0.88},
+                        "multi_step_tool_chain_pass_rate": {"mean": 0.78},
                         "int8_accuracy_drop": {"mean": 0.04},
                         "int8_comm_savings_percent": {"mean": 72.0},
                     },
@@ -598,9 +626,13 @@ class ValidationScriptTests(unittest.TestCase):
                         "overall_score": {"mean": 0.50, "std": 0.20},
                         "classification_accuracy": {"mean": 0.60},
                         "retrieval_recall_at_1": {"mean": 0.40},
+                        "long_context_recall_at_1": {"mean": 0.42},
+                        "long_context_mrr": {"mean": 0.45},
                         "instruction_pass_rate": {"mean": 0.50},
                         "conversation_pass_rate": {"mean": 0.40},
                         "tool_pass_rate": {"mean": 0.70},
+                        "multi_step_tool_pass_rate": {"mean": 0.45},
+                        "multi_step_tool_chain_pass_rate": {"mean": 0.30},
                         "int8_accuracy_drop": {"mean": 0.30},
                         "int8_comm_savings_percent": {"mean": 20.0},
                     },

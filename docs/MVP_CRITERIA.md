@@ -17,11 +17,13 @@ A build is considered MVP-ready when it can pass the following task families loc
 
 1. Local classification quality
 2. Local retrieval quality
-3. Instruction following (action compliance)
-4. Conversation continuity (multi-turn memory + intent transitions)
-5. Tool use (calculator correctness)
-6. Centralized vs federated distributed reference comparison
-7. Adapter-style federated proxy check (low-rank intent adapter)
+3. Long-context retrieval quality
+4. Instruction following (action compliance)
+5. Conversation continuity (multi-turn memory + intent transitions)
+6. Tool use (calculator correctness)
+7. Multi-step tool use (chained deterministic calculations)
+8. Centralized vs federated distributed reference comparison
+9. Adapter-style federated proxy check (low-rank intent adapter)
 
 ## Required thresholds
 
@@ -33,9 +35,13 @@ These are the default gates implemented in `scripts/check_generality.py`.
 | Classification | macro F1 | `>= 0.78` |
 | Retrieval | recall@1 | `>= 0.60` |
 | Retrieval | MRR | `>= 0.75` |
+| Long-context retrieval | recall@1 | `>= 0.70` |
+| Long-context retrieval | MRR | `>= 0.80` |
 | Instruction following | pass rate | `>= 0.75` |
 | Conversation continuity | pass rate | `>= 0.80` |
 | Tool use | pass rate | `>= 0.80` |
+| Multi-step tool use | step pass rate | `>= 0.80` |
+| Multi-step tool use | chain pass rate | `>= 0.66` |
 | Aggregate | overall score | `>= 0.75` |
 | Runtime envelope | total eval wall clock | `<= 180s` |
 | Distributed reference | int8 accuracy drop vs centralized | `<= 0.10` |
