@@ -31,6 +31,7 @@ Each task has a Definition of Done (DoD) command so completion can be re-checked
 | T3.4 | Keep full strict smoke path green | `smoke_summary.json` | `python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json` |
 | T3.5 | Capture per-machine strict-gate snapshots | `pilot/machine_snapshots/<timestamp>_<machine_id>/snapshot_meta.json` | `python3 scripts/capture_machine_snapshot.py --machine-id my-machine-01 --out-dir pilot/machine_snapshots` |
 | T3.6 | Build machine comparison report from 3+ snapshots | `reports/machine_comparison.json`, `reports/machine_comparison.md` | `python3 scripts/build_machine_comparison_report.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --require-mvp-readiness --json-out reports/machine_comparison.json --md-out reports/machine_comparison.md` |
+| T3.7 | Run failure-injection drill for snapshot comparison resilience | `reports/machine_reliability_drill.json`, `reports/machine_reliability_drill.md` | `python3 scripts/run_machine_reliability_drill.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --json-out reports/machine_reliability_drill.json --md-out reports/machine_reliability_drill.md` |
 
 ## Externalization Tasks (M4)
 

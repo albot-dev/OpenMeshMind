@@ -88,6 +88,7 @@ Execution commands:
 
 - `python3 scripts/capture_machine_snapshot.py --machine-id my-machine-01 --out-dir pilot/machine_snapshots`
 - `python3 scripts/build_machine_comparison_report.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --require-mvp-readiness --json-out reports/machine_comparison.json --md-out reports/machine_comparison.md`
+- `python3 scripts/run_machine_reliability_drill.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --json-out reports/machine_reliability_drill.json --md-out reports/machine_reliability_drill.md`
 
 Progress:
 

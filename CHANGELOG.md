@@ -56,8 +56,10 @@ All notable changes to OpenMeshMind are documented here.
 - Added solo multi-machine reliability automation for N4:
   - `scripts/capture_machine_snapshot.py` (captures standardized per-machine strict-gate artifacts)
   - `scripts/build_machine_comparison_report.py` (aggregates 3+ snapshots, validates gates, computes variance/pass-fail summary)
+  - `scripts/run_machine_reliability_drill.py` (failure-injection drill for missing artifacts/readiness regressions)
   - `tests/test_capture_machine_snapshot.py`
   - `tests/test_build_machine_comparison_report.py`
+  - `tests/test_run_machine_reliability_drill.py`
 - Updated user docs with snapshot capture/comparison commands:
   - `README.md`
   - `docs/NEXT_STEPS.md`

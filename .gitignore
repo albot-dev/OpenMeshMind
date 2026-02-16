@@ -13,6 +13,9 @@ smoke_summary.json
 mvp_readiness.json
 reports/machine_comparison.json
 reports/machine_comparison.md
+reports/machine_reliability_drill.json
+reports/machine_reliability_drill.md
+reports/machine_reliability_drill/
 pilot/machine_snapshots/
 reports/weekly_status.md
 reports/weekly_artifacts.tgz
