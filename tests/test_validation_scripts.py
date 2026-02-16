@@ -217,6 +217,140 @@ class ValidationScriptTests(unittest.TestCase):
             self.assertEqual(code_bad, 1)
             self.assertIn("Validation failed:", out_bad)
 
+    def test_check_cohort_manifest_diversity_thresholds(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            metrics_a = self._write_json(
+                tmp,
+                "node_a_metrics.json",
+                {
+                    "schema_version": 1,
+                    "node": {"node_id": "node-a"},
+                    "health": {"last_cycle_ok": True},
+                },
+            )
+            metrics_b = self._write_json(
+                tmp,
+                "node_b_metrics.json",
+                {
+                    "schema_version": 1,
+                    "node": {"node_id": "node-b"},
+                    "health": {"last_cycle_ok": True},
+                },
+            )
+            same_region = self._write_json(
+                tmp,
+                "cohort_same_region.json",
+                {
+                    "schema_version": 1,
+                    "cohort_id": "pilot-cohort-test",
+                    "generated_utc": "2026-02-16T08:00:00+00:00",
+                    "nodes": [
+                        {
+                            "node_id": "node-a",
+                            "region": "us-east",
+                            "hardware_tier": "mid",
+                            "cpu_cores": 8,
+                            "memory_gb": 16,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-16T08:00:00+00:00",
+                            "metrics_path": str(metrics_a),
+                            "failure_reason": "",
+                        },
+                        {
+                            "node_id": "node-b",
+                            "region": "us-east",
+                            "hardware_tier": "mid",
+                            "cpu_cores": 8,
+                            "memory_gb": 16,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-16T08:00:00+00:00",
+                            "metrics_path": str(metrics_b),
+                            "failure_reason": "",
+                        },
+                    ],
+                },
+            )
+            diverse = self._write_json(
+                tmp,
+                "cohort_diverse.json",
+                {
+                    "schema_version": 1,
+                    "cohort_id": "pilot-cohort-test",
+                    "generated_utc": "2026-02-16T08:00:00+00:00",
+                    "nodes": [
+                        {
+                            "node_id": "node-a",
+                            "region": "us-east",
+                            "hardware_tier": "mid",
+                            "cpu_cores": 8,
+                            "memory_gb": 16,
+                            "network_tier": "home-broadband",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-16T08:00:00+00:00",
+                            "metrics_path": str(metrics_a),
+                            "failure_reason": "",
+                        },
+                        {
+                            "node_id": "node-b",
+                            "region": "eu-west",
+                            "hardware_tier": "low",
+                            "cpu_cores": 4,
+                            "memory_gb": 8,
+                            "network_tier": "residential-fiber",
+                            "onboarding_status": "passed",
+                            "onboarding_checked_utc": "2026-02-16T08:00:00+00:00",
+                            "metrics_path": str(metrics_b),
+                            "failure_reason": "",
+                        },
+                    ],
+                },
+            )
+
+            code_fail, out_fail = self._run_main(
+                check_cohort_manifest.main,
+                [
+                    "check_cohort_manifest.py",
+                    str(same_region),
+                    "--min-nodes",
+                    "2",
+                    "--min-passed",
+                    "2",
+                    "--min-distinct-regions",
+                    "2",
+                    "--min-distinct-hardware-tiers",
+                    "2",
+                    "--min-distinct-network-tiers",
+                    "2",
+                ],
+            )
+            self.assertEqual(code_fail, 1)
+            self.assertIn("Validation failed:", out_fail)
+
+            code_pass, out_pass = self._run_main(
+                check_cohort_manifest.main,
+                [
+                    "check_cohort_manifest.py",
+                    str(diverse),
+                    "--min-nodes",
+                    "2",
+                    "--min-passed",
+                    "2",
+                    "--min-distinct-regions",
+                    "2",
+                    "--min-distinct-hardware-tiers",
+                    "2",
+                    "--min-distinct-network-tiers",
+                    "2",
+                    "--max-unknown-region-ratio",
+                    "0.5",
+                ],
+            )
+            self.assertEqual(code_pass, 0)
+            self.assertIn("Validation passed.", out_pass)
+
     def test_check_benchmarks_pass_and_fail_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

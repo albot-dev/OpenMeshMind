@@ -25,6 +25,12 @@ python3 scripts/check_cohort_manifest.py \
   --min-passed 0 \
   --require-metrics-files \
   --summary-json-out pilot/cohort_onboarding_summary.json
+
+# Optional public-cohort diversity/readiness checks:
+# --min-distinct-regions 3 \
+# --min-distinct-hardware-tiers 2 \
+# --min-distinct-network-tiers 2 \
+# --max-unknown-region-ratio 0.2
 ```
 
 For the full public volunteer cohort gate, use `--min-nodes 5 --min-passed 5`.

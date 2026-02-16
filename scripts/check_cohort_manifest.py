@@ -85,6 +85,30 @@ def main() -> int:
         help="Require metrics_path files to exist for passed nodes.",
     )
     parser.add_argument(
+        "--min-distinct-regions",
+        type=int,
+        default=0,
+        help="Minimum distinct region values across passed nodes (default: 0, disabled).",
+    )
+    parser.add_argument(
+        "--min-distinct-hardware-tiers",
+        type=int,
+        default=0,
+        help="Minimum distinct hardware_tier values across passed nodes (default: 0, disabled).",
+    )
+    parser.add_argument(
+        "--min-distinct-network-tiers",
+        type=int,
+        default=0,
+        help="Minimum distinct network_tier values across passed nodes (default: 0, disabled).",
+    )
+    parser.add_argument(
+        "--max-unknown-region-ratio",
+        type=float,
+        default=1.0,
+        help="Maximum allowed unknown-region ratio across passed nodes (default: 1.0).",
+    )
+    parser.add_argument(
         "--summary-json-out",
         default="",
         help="Optional path to write onboarding summary JSON.",
@@ -114,6 +138,10 @@ def main() -> int:
     passed = 0
     failed = 0
     pending = 0
+    passed_regions: set[str] = set()
+    passed_hardware_tiers: set[str] = set()
+    passed_network_tiers: set[str] = set()
+    passed_unknown_region = 0
 
     for idx, node in enumerate(nodes):
         if not isinstance(node, dict):
@@ -131,6 +159,17 @@ def main() -> int:
         status = node.get("onboarding_status")
         if status == "passed":
             passed += 1
+            region_value = str(node.get("region", "")).strip().lower()
+            hardware_tier_value = str(node.get("hardware_tier", "")).strip().lower()
+            network_tier_value = str(node.get("network_tier", "")).strip().lower()
+            if region_value:
+                passed_regions.add(region_value)
+            if hardware_tier_value:
+                passed_hardware_tiers.add(hardware_tier_value)
+            if network_tier_value:
+                passed_network_tiers.add(network_tier_value)
+            if not region_value or region_value == "unknown":
+                passed_unknown_region += 1
             if args.require_metrics_files:
                 metrics_path = _resolve(str(node.get("metrics_path", "")))
                 if not metrics_path.exists():
@@ -165,6 +204,32 @@ def main() -> int:
         failures.append(f"node_count={total} < min_nodes={args.min_nodes}")
     if passed < args.min_passed:
         failures.append(f"passed_count={passed} < min_passed={args.min_passed}")
+    if args.min_distinct_regions > 0 and len(passed_regions) < args.min_distinct_regions:
+        failures.append(
+            f"distinct_regions={len(passed_regions)} < min_distinct_regions={args.min_distinct_regions}"
+        )
+    if (
+        args.min_distinct_hardware_tiers > 0
+        and len(passed_hardware_tiers) < args.min_distinct_hardware_tiers
+    ):
+        failures.append(
+            "distinct_hardware_tiers="
+            f"{len(passed_hardware_tiers)} < min_distinct_hardware_tiers={args.min_distinct_hardware_tiers}"
+        )
+    if (
+        args.min_distinct_network_tiers > 0
+        and len(passed_network_tiers) < args.min_distinct_network_tiers
+    ):
+        failures.append(
+            "distinct_network_tiers="
+            f"{len(passed_network_tiers)} < min_distinct_network_tiers={args.min_distinct_network_tiers}"
+        )
+    unknown_region_ratio = (passed_unknown_region / passed) if passed > 0 else 0.0
+    if unknown_region_ratio > args.max_unknown_region_ratio:
+        failures.append(
+            f"unknown_region_ratio={unknown_region_ratio:.4f} > "
+            f"max_unknown_region_ratio={args.max_unknown_region_ratio:.4f}"
+        )
 
     summary = {
         "schema_version": 1,
@@ -176,6 +241,10 @@ def main() -> int:
         "pending_count": pending,
         "startup_rate": startup_rate,
         "failure_rate": failure_rate,
+        "distinct_regions": len(passed_regions),
+        "distinct_hardware_tiers": len(passed_hardware_tiers),
+        "distinct_network_tiers": len(passed_network_tiers),
+        "unknown_region_ratio": unknown_region_ratio,
     }
 
     print("Cohort onboarding summary")
@@ -186,6 +255,10 @@ def main() -> int:
     print(f"- pending_count: {pending}")
     print(f"- startup_rate: {startup_rate:.4f}")
     print(f"- failure_rate: {failure_rate:.4f}")
+    print(f"- distinct_regions: {summary['distinct_regions']}")
+    print(f"- distinct_hardware_tiers: {summary['distinct_hardware_tiers']}")
+    print(f"- distinct_network_tiers: {summary['distinct_network_tiers']}")
+    print(f"- unknown_region_ratio: {summary['unknown_region_ratio']:.4f}")
 
     if args.summary_json_out:
         out_path = _resolve(args.summary_json_out)

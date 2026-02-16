@@ -87,3 +87,10 @@
   - `pilot/PILOT_14_DAY_RUNBOOK.md`
   - `pilot/cohort_manifest.schema.v1.json`
   - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
+
+## Phase 8: Post-MVP Externalization and Capability Expansion
+
+- Harden external cohort readiness checks (diversity + metadata quality).
+- Run external multi-operator cohort intake and publish updated reports.
+- Expand generality gate task breadth while preserving CPU-first reproducibility.
+- Detailed next-step tracker: `docs/NEXT_STEPS.md`.

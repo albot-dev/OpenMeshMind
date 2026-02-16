@@ -2,6 +2,19 @@
 
 All notable changes to OpenMeshMind are documented here.
 
+## 2026-02-16
+
+### Added
+
+- Added cohort diversity/readiness thresholds to `scripts/check_cohort_manifest.py`:
+  - `--min-distinct-regions`
+  - `--min-distinct-hardware-tiers`
+  - `--min-distinct-network-tiers`
+  - `--max-unknown-region-ratio`
+- Added validation coverage for cohort diversity pass/fail paths in `tests/test_validation_scripts.py`.
+- Added forward execution plan: `docs/NEXT_STEPS.md`.
+- Extended roadmap with post-MVP externalization/capability-expansion phase in `ROADMAP.md`.
+
 ## 2026-02-15
 
 ### Added

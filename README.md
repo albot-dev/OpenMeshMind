@@ -214,6 +214,11 @@ python3 scripts/check_cohort_manifest.py \
   --min-passed 0 \
   --require-metrics-files \
   --summary-json-out pilot/cohort_onboarding_summary.json
+# Optional public-cohort readiness constraints:
+# --min-distinct-regions 3 \
+# --min-distinct-hardware-tiers 2 \
+# --min-distinct-network-tiers 2 \
+# --max-unknown-region-ratio 0.2
 python3 scripts/build_pilot_cohort_metrics.py --metrics pilot/pilot_metrics.json --json-out pilot/pilot_cohort_metrics.json
 python3 scripts/check_pilot_cohort.py pilot/pilot_cohort_metrics.json --min-node-count 1
 python3 scripts/generate_pilot_status_report.py \
@@ -285,6 +290,7 @@ Pilot operations references:
 - `PROJECTS.md`
 - `docs/MVP_CRITERIA.md`
 - `docs/COMING_GOALS.md`
+- `docs/NEXT_STEPS.md`
 - `PILOT_NODE.md`
 - `PILOT_OPERATIONS.md`
 - `PILOT_GOVERNANCE.md`
@@ -292,7 +298,7 @@ Pilot operations references:
 
 ## Next milestones
 
-See `ROADMAP.md` for phased execution and `docs/COMING_GOALS.md` for current goal/sub-goal completion tracking.
+See `ROADMAP.md` for phased execution, `docs/COMING_GOALS.md` for current goal/sub-goal completion tracking, and `docs/NEXT_STEPS.md` for the upcoming execution order.
 
 ## Work tracking
 
