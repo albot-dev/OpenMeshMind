@@ -53,6 +53,15 @@ All notable changes to OpenMeshMind are documented here.
   - `tests/test_generate_pilot_status_report.py`
   - `tests/test_solo_multi_machine_mode.py` (invalid metrics bundle path)
   - `tests/test_validation_scripts.py` (cohort schema additional-property rejection)
+- Added solo multi-machine reliability automation for N4:
+  - `scripts/capture_machine_snapshot.py` (captures standardized per-machine strict-gate artifacts)
+  - `scripts/build_machine_comparison_report.py` (aggregates 3+ snapshots, validates gates, computes variance/pass-fail summary)
+  - `tests/test_capture_machine_snapshot.py`
+  - `tests/test_build_machine_comparison_report.py`
+- Updated user docs with snapshot capture/comparison commands:
+  - `README.md`
+  - `docs/NEXT_STEPS.md`
+  - `docs/MVP_TASK_BREAKDOWN.md`
 
 ### Changed
 

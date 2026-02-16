@@ -255,6 +255,19 @@ python3 scripts/solo_multi_machine_mode.py \
   --min-nodes 1 \
   --min-passed 0 \
   --require-metrics-files
+
+# Capture a standardized snapshot on each personal machine:
+python3 scripts/capture_machine_snapshot.py \
+  --machine-id my-machine-01 \
+  --out-dir pilot/machine_snapshots
+
+# Compare at least 3 captured snapshots with strict pass/fail thresholds:
+python3 scripts/build_machine_comparison_report.py \
+  --snapshot-glob 'pilot/machine_snapshots/*' \
+  --min-snapshots 3 \
+  --require-mvp-readiness \
+  --json-out reports/machine_comparison.json \
+  --md-out reports/machine_comparison.md
 ```
 
 The solo import pipeline now validates each imported `pilot_metrics.json` against `schemas/pilot_metrics.schema.v1.json` and validates the cohort manifest against `pilot/cohort_manifest.schema.v1.json` before continuing.
@@ -289,6 +302,8 @@ Pilot operations references:
 - `pilot/VOLUNTEER_DATA_SUBMISSION.md`
 - `scripts/volunteer_node_setup.sh`
 - `scripts/solo_multi_machine_mode.py`
+- `scripts/capture_machine_snapshot.py`
+- `scripts/build_machine_comparison_report.py`
 - `reports/PILOT_14_DAY_REPORT_TEMPLATE.md`
 - `schemas/pilot_metrics.schema.v1.json`
 - `schemas/pilot_cohort.schema.v1.json`

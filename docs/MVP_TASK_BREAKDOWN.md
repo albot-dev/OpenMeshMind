@@ -29,6 +29,8 @@ Each task has a Definition of Done (DoD) command so completion can be re-checked
 | T3.2 | Keep strict goal roll-up green | `main_track_status.json`, `reports/main_track_status.md` | `python3 scripts/main_track_status.py --require-fairness --require-smoke-summary --fail-on-incomplete --json-out main_track_status.json --md-out reports/main_track_status.md` |
 | T3.3 | Keep machine-verifiable readiness check green | `mvp_readiness.json` | `python3 scripts/check_mvp_readiness.py --require-fairness --require-all-goals-done --json-out mvp_readiness.json` |
 | T3.4 | Keep full strict smoke path green | `smoke_summary.json` | `python3 scripts/smoke_check.py --include-fairness --json-out smoke_summary.json` |
+| T3.5 | Capture per-machine strict-gate snapshots | `pilot/machine_snapshots/<timestamp>_<machine_id>/snapshot_meta.json` | `python3 scripts/capture_machine_snapshot.py --machine-id my-machine-01 --out-dir pilot/machine_snapshots` |
+| T3.6 | Build machine comparison report from 3+ snapshots | `reports/machine_comparison.json`, `reports/machine_comparison.md` | `python3 scripts/build_machine_comparison_report.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --require-mvp-readiness --json-out reports/machine_comparison.json --md-out reports/machine_comparison.md` |
 
 ## Externalization Tasks (M4)
 

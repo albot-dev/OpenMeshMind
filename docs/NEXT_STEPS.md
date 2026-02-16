@@ -84,6 +84,16 @@ Exit criteria:
 - At least 3 machine snapshots in a shared schema pass current generality + reproducibility gates.
 - A repeatable replay script reproduces the comparison report from raw artifacts.
 
+Execution commands:
+
+- `python3 scripts/capture_machine_snapshot.py --machine-id my-machine-01 --out-dir pilot/machine_snapshots`
+- `python3 scripts/build_machine_comparison_report.py --snapshot-glob 'pilot/machine_snapshots/*' --min-snapshots 3 --require-mvp-readiness --json-out reports/machine_comparison.json --md-out reports/machine_comparison.md`
+
+Progress:
+
+- Snapshot capture and comparison automation scripts are implemented and tested.
+- Remaining work is collecting real snapshots from at least 3 personal machines and publishing the resulting comparison artifacts.
+
 ## Immediate execution order
 
 1. Execute N4 reliability hardening and publish machine-comparison artifacts, aligned to phase targets in `docs/MVP_USER_VALUE_PLAN.md`.
