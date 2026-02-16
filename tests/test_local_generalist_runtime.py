@@ -72,3 +72,40 @@ class LocalGeneralistRuntimeTests(unittest.TestCase):
         self.assertEqual(result["intent"], "retrieval_lookup")
         self.assertGreaterEqual(len(result["retrieval_hits"]), 2)
         self.assertIn("1.", result["answer"])
+
+    def test_memory_store_and_recall_with_natural_phrasing(self) -> None:
+        stored = self.agent.respond("Can you remember that the demo starts Friday at 3 PM UTC?")
+        recalled = self.agent.respond("Can you remind me what I asked you to remember?")
+        self.assertEqual(stored["intent"], "memory_store")
+        self.assertEqual(recalled["intent"], "memory_recall")
+        self.assertIn("Friday", recalled["answer"])
+        self.assertIn("3 PM UTC", recalled["answer"])
+
+    def test_memory_list_with_natural_question(self) -> None:
+        self.agent.respond("Remember that alpha checkpoint is on.")
+        listed = self.agent.respond("What do you remember?")
+        self.assertEqual(listed["intent"], "memory_list")
+        self.assertIn("alpha checkpoint", listed["answer"])
+
+    def test_retrieval_supports_word_top_k_and_docs_phrase(self) -> None:
+        result = self.agent.respond(
+            "What do the docs say about secure aggregation? Show three results with citations."
+        )
+        self.assertEqual(result["intent"], "retrieval_lookup")
+        self.assertGreaterEqual(len(result["retrieval_hits"]), 3)
+        self.assertIn("1.", result["answer"])
+
+    def test_calculator_supports_word_numbers(self) -> None:
+        result = self.agent.respond("What is twelve plus eight")
+        self.assertEqual(result["intent"], "tool_calculator")
+        self.assertEqual(result["answer"], "20")
+
+    def test_calculator_supports_subtract_from_form(self) -> None:
+        result = self.agent.respond("Subtract five from twenty")
+        self.assertEqual(result["intent"], "tool_calculator")
+        self.assertEqual(result["answer"], "15")
+
+    def test_calculator_chain_supports_word_numbers(self) -> None:
+        result = self.agent.respond("What is twelve plus eight then multiply by three then subtract two")
+        self.assertEqual(result["intent"], "tool_calculator")
+        self.assertEqual(result["answer"], "58")

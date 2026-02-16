@@ -34,17 +34,88 @@ from experiments import local_retrieval_baseline as retrieval
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 EXPR_RE = re.compile(r"[-+/*().%0-9 ]+")
-TOP_K_RE = re.compile(r"\btop\s*(\d+)\b|\b(\d+)\s+results?\b", re.IGNORECASE)
-MULTIPLIER_RE = re.compile(
-    r"\b(?:x|times|multiply(?:\s+that)?(?:\s+by)?|multiplied by)\s+(-?\d+(?:\.\d+)?)",
-    re.IGNORECASE,
+TOP_K_RE = re.compile(r"\btop\s+([a-z0-9-]+)\b|\b([a-z0-9-]+)\s+results?\b", re.IGNORECASE)
+NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+FOLLOWUP_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(
+            r"\b(?:x|times|multiply(?:\s+that)?(?:\s+by)?|multipl(?:y|ied)(?:\s+that)?(?:\s+by)?)\b(?P<tail>.*)",
+            re.IGNORECASE,
+        ),
+        "mul",
+    ),
+    (
+        re.compile(
+            r"\b(?:divide(?:\s+that)?(?:\s+by)?|divided by|over)\b(?P<tail>.*)",
+            re.IGNORECASE,
+        ),
+        "div",
+    ),
+    (re.compile(r"\b(?:add|plus)\b(?P<tail>.*)", re.IGNORECASE), "add"),
+    (re.compile(r"\b(?:subtract|minus)\b(?P<tail>.*)", re.IGNORECASE), "sub"),
+]
+
+NUMBER_WORD_UNITS = {
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+}
+NUMBER_WORD_TEENS = {
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+}
+NUMBER_WORD_TENS = {
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+}
+NUMBER_WORD_SCALES = {
+    "hundred": 100,
+    "thousand": 1000,
+    "million": 1000000,
+}
+NUMBER_WORD_TOKENS = (
+    set(NUMBER_WORD_UNITS)
+    | set(NUMBER_WORD_TEENS)
+    | set(NUMBER_WORD_TENS)
+    | set(NUMBER_WORD_SCALES)
+    | {"and", "point", "minus", "negative", "a", "an"}
 )
-ADD_RE = re.compile(r"\badd\s+(-?\d+(?:\.\d+)?)", re.IGNORECASE)
-SUB_RE = re.compile(r"\bsubtract\s+(-?\d+(?:\.\d+)?)", re.IGNORECASE)
-DIV_RE = re.compile(
-    r"\b(?:divide(?:\s+that)?(?:\s+by)?|divided by)\s+(-?\d+(?:\.\d+)?)",
-    re.IGNORECASE,
-)
+CALC_PREFIXES = [
+    "what is",
+    "what's",
+    "whats",
+    "calculate",
+    "compute",
+    "evaluate",
+    "please calculate",
+    "please compute",
+    "please evaluate",
+    "can you calculate",
+    "can you compute",
+    "could you calculate",
+    "could you compute",
+]
 
 
 BASE_INTENT_TEMPLATES: dict[str, list[str]] = {
@@ -279,11 +350,271 @@ def normalize_number(value: float) -> str:
     return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
+def clean_fragment(text: str) -> str:
+    return text.strip().strip(" ,.;:!?").strip('"').strip("'")
+
+
+def strip_calc_prefix(prompt: str) -> str:
+    stripped = prompt.strip()
+    lowered = stripped.lower()
+    for prefix in sorted(CALC_PREFIXES, key=len, reverse=True):
+        marker = f"{prefix} "
+        if lowered.startswith(marker):
+            return stripped[len(marker) :].strip()
+    return stripped
+
+
+def parse_number_phrase(text: str) -> float | None:
+    cleaned = clean_fragment(text).lower().replace("-", " ")
+    if not cleaned:
+        return None
+    numeric_candidate = cleaned.replace(",", "")
+    try:
+        return float(numeric_candidate)
+    except ValueError:
+        pass
+
+    tokens = [tok for tok in re.findall(r"[a-z0-9]+", cleaned) if tok]
+    if not tokens:
+        return None
+
+    negative = False
+    if tokens[0] in {"minus", "negative"}:
+        negative = True
+        tokens = tokens[1:]
+    if not tokens:
+        return None
+
+    total = 0
+    current = 0
+    decimal_digits: list[str] = []
+    in_decimal = False
+
+    for token in tokens:
+        if token == "and" and not in_decimal:
+            continue
+        if token == "point":
+            if in_decimal:
+                return None
+            in_decimal = True
+            continue
+
+        if in_decimal:
+            if token in NUMBER_WORD_UNITS:
+                decimal_digits.append(str(NUMBER_WORD_UNITS[token]))
+                continue
+            if token.isdigit() and len(token) == 1:
+                decimal_digits.append(token)
+                continue
+            return None
+
+        if token in {"a", "an"}:
+            current += 1
+            continue
+        if token in NUMBER_WORD_UNITS:
+            current += NUMBER_WORD_UNITS[token]
+            continue
+        if token in NUMBER_WORD_TEENS:
+            current += NUMBER_WORD_TEENS[token]
+            continue
+        if token in NUMBER_WORD_TENS:
+            current += NUMBER_WORD_TENS[token]
+            continue
+        if token == "hundred":
+            current = max(1, current) * 100
+            continue
+        if token in {"thousand", "million"}:
+            scale = NUMBER_WORD_SCALES[token]
+            total += max(1, current) * scale
+            current = 0
+            continue
+        if token.isdigit():
+            current += int(token)
+            continue
+        return None
+
+    value = float(total + current)
+    if decimal_digits:
+        value += float(f"0.{''.join(decimal_digits)}")
+    if negative:
+        value = -value
+    return value
+
+
+def extract_first_number_value(text: str) -> float | None:
+    numeric_match = NUMBER_RE.search(text.replace(",", ""))
+    if numeric_match:
+        try:
+            return float(numeric_match.group(0))
+        except ValueError:
+            return None
+
+    tokens = re.findall(r"[a-z0-9]+", text.lower().replace("-", " "))
+    if not tokens:
+        return None
+
+    max_span = min(10, len(tokens))
+    for start in range(len(tokens)):
+        if tokens[start] not in NUMBER_WORD_TOKENS:
+            continue
+        for end in range(min(len(tokens), start + max_span), start, -1):
+            value = parse_number_phrase(" ".join(tokens[start:end]))
+            if value is not None:
+                return value
+    return None
+
+
+def parse_operand_value(text: str) -> float | None:
+    direct = parse_number_phrase(text)
+    if direct is not None:
+        return direct
+    return extract_first_number_value(text)
+
+
+def parse_binary_calculation(prompt: str) -> tuple[str, float, float] | None:
+    lowered = strip_calc_prefix(prompt).lower()
+    lowered = re.sub(r"\s+", " ", lowered).strip()
+    if not lowered:
+        return None
+
+    imperative_patterns = [
+        (r"\badd\s+(.+?)\s+to\s+(.+)", "add", True),
+        (r"\bsubtract\s+(.+?)\s+from\s+(.+)", "sub", True),
+        (r"\bmultiply\s+(.+?)\s+by\s+(.+)", "mul", False),
+        (r"\bdivide\s+(.+?)\s+by\s+(.+)", "div", False),
+    ]
+    for pattern, op_name, reversed_args in imperative_patterns:
+        match = re.search(pattern, lowered, flags=re.IGNORECASE)
+        if not match:
+            continue
+        first = parse_operand_value(match.group(1))
+        second = parse_operand_value(match.group(2))
+        if first is None or second is None:
+            continue
+        left = second if reversed_args else first
+        right = first if reversed_args else second
+        return op_name, left, right
+
+    infix_patterns = [
+        ("raised to the power of", "pow"),
+        ("to the power of", "pow"),
+        ("raised to", "pow"),
+        ("multiplied by", "mul"),
+        ("divided by", "div"),
+        ("modulo", "mod"),
+        ("times", "mul"),
+        ("plus", "add"),
+        ("minus", "sub"),
+        ("over", "div"),
+        ("mod", "mod"),
+    ]
+    for phrase, op_name in infix_patterns:
+        match = re.search(
+            rf"(.+?)\b{re.escape(phrase)}\b(.+)",
+            lowered,
+            flags=re.IGNORECASE,
+        )
+        if not match:
+            continue
+        left = parse_operand_value(match.group(1))
+        right = parse_operand_value(match.group(2))
+        if left is None or right is None:
+            continue
+        return op_name, left, right
+
+    x_match = re.search(r"(.+?)\sx\s(.+)", lowered, flags=re.IGNORECASE)
+    if x_match:
+        left = parse_operand_value(x_match.group(1))
+        right = parse_operand_value(x_match.group(2))
+        if left is not None and right is not None:
+            return "mul", left, right
+    return None
+
+
+def evaluate_calculation_prompt(prompt: str) -> float:
+    expr = sanitize_expression(prompt)
+    if expr:
+        return safe_eval_expression(expr)
+    parsed = parse_binary_calculation(prompt)
+    if parsed is None:
+        raise ValueError("No expression found.")
+    op_name, left, right = parsed
+    return apply_operation(base=left, op_name=op_name, operand=right)
+
+
+def is_memory_list_request(prompt: str) -> bool:
+    lowered = prompt.lower()
+    phrases = [
+        "list my notes",
+        "show my notes",
+        "show memory",
+        "show stored notes",
+        "what notes do you have",
+        "what are my notes",
+        "show everything you remember",
+        "list everything you remember",
+        "what do you remember",
+    ]
+    return any(phrase in lowered for phrase in phrases)
+
+
+def is_memory_recall_request(prompt: str) -> bool:
+    lowered = prompt.lower()
+    phrases = [
+        "what did i ask you to remember",
+        "what did i tell you to remember",
+        "what note did i save",
+        "what was my reminder",
+        "recall",
+        "remind me what",
+        "do you remember what",
+        "what did i ask you to store",
+    ]
+    return any(phrase in lowered for phrase in phrases)
+
+
+def is_memory_forget_request(prompt: str) -> bool:
+    lowered = prompt.lower()
+    verbs = ["forget", "remove", "delete", "erase"]
+    nouns = ["note", "memory", "reminder", "latest", "last", "previous"]
+    return any(v in lowered for v in verbs) and any(n in lowered for n in nouns)
+
+
+def is_retrieval_request(prompt: str) -> bool:
+    lowered = prompt.lower()
+    direct = ["lookup", "search", "find", "retrieve", "corpus", "show sources", "with citations"]
+    if any(token in lowered for token in direct):
+        return True
+    doc_terms = ["docs", "document", "documents", "readme", "repository", "repo", "source", "sources"]
+    query_terms = ["what", "which", "where", "show", "tell", "explain", "summarize", "mentions"]
+    return any(term in lowered for term in doc_terms) and any(term in lowered for term in query_terms)
+
+
+def is_calculator_request(prompt: str) -> bool:
+    lowered = prompt.lower()
+    if parse_binary_calculation(prompt):
+        return True
+    if "then" in lowered:
+        segments = parse_then_segments(prompt)
+        if segments and (sanitize_expression(segments[0]) or parse_binary_calculation(segments[0])):
+            return True
+    if parse_followup_operation(prompt):
+        if any(token in lowered for token in ["that", "previous result", "last result"]):
+            return True
+        if any(token in lowered for token in ["add ", "subtract", "multiply", "divide", "times", "plus", "minus"]):
+            return True
+    if any(keyword in lowered for keyword in ["calculate", "compute", "evaluate", "what is ", "what's ", "whats "]):
+        if sanitize_expression(prompt):
+            return True
+    return False
+
+
 def extract_exact_response(prompt: str) -> str | None:
     lowered = prompt.lower()
     patterns = [
         "respond exactly with:",
         "reply exactly with:",
+        "answer exactly with:",
         "say exactly:",
         "print exactly:",
     ]
@@ -297,22 +628,29 @@ def extract_exact_response(prompt: str) -> str | None:
 
 def extract_memory_note(prompt: str) -> str | None:
     lowered = prompt.lower()
+    if is_memory_recall_request(prompt) or is_memory_list_request(prompt):
+        return None
+
     markers = [
         "remember that",
         "remember this note:",
         "remember:",
         "store this for later:",
         "note this down:",
+        "save this for later:",
+        "keep in mind that",
+        "can you remember that",
+        "could you remember that",
     ]
     for marker in markers:
         idx = lowered.find(marker)
         if idx == -1:
             continue
-        value = prompt[idx + len(marker) :].strip()
+        value = clean_fragment(prompt[idx + len(marker) :])
         if value:
             return value
     if lowered.startswith("remember "):
-        value = prompt[len("remember ") :].strip()
+        value = clean_fragment(prompt[len("remember ") :])
         if value:
             return value
     return None
@@ -324,6 +662,9 @@ def extract_forget_keyword(prompt: str) -> str | None:
         "forget note about",
         "remove note about",
         "delete note about",
+        "forget memory about",
+        "remove memory about",
+        "delete memory about",
     ]
     for marker in markers:
         idx = lowered.find(marker)
@@ -342,9 +683,11 @@ def parse_top_k_from_prompt(prompt: str) -> int | None:
     raw = match.group(1) or match.group(2)
     if not raw:
         return None
-    try:
-        value = int(raw)
-    except ValueError:
+    parsed = parse_number_phrase(raw)
+    if parsed is None:
+        return None
+    value = int(round(parsed))
+    if abs(parsed - value) > 1e-9:
         return None
     if value <= 0:
         return None
@@ -363,19 +706,14 @@ def parse_then_segments(prompt: str) -> list[str]:
 
 
 def parse_followup_operation(prompt: str) -> tuple[str, float] | None:
-    for regex, op_name in [
-        (MULTIPLIER_RE, "mul"),
-        (DIV_RE, "div"),
-        (ADD_RE, "add"),
-        (SUB_RE, "sub"),
-    ]:
+    for regex, op_name in FOLLOWUP_PATTERNS:
         match = regex.search(prompt)
         if not match:
             continue
-        try:
-            value = float(match.group(1))
-        except (TypeError, ValueError):
-            return None
+        tail = match.group("tail") if "tail" in match.groupdict() else ""
+        value = extract_first_number_value(tail)
+        if value is None:
+            continue
         return op_name, value
     return None
 
@@ -387,6 +725,12 @@ def apply_operation(base: float, op_name: str, operand: float) -> float:
         if abs(operand) < 1e-12:
             raise ValueError("division by zero")
         return base / operand
+    if op_name == "mod":
+        if abs(operand) < 1e-12:
+            raise ValueError("division by zero")
+        return base % operand
+    if op_name == "pow":
+        return base**operand
     if op_name == "add":
         return base + operand
     if op_name == "sub":
@@ -395,23 +739,19 @@ def apply_operation(base: float, op_name: str, operand: float) -> float:
 
 
 def infer_intent_override(prompt: str) -> str | None:
-    lowered = prompt.lower()
     if extract_exact_response(prompt):
         return "response_exact"
+    if is_memory_list_request(prompt):
+        return "memory_list"
+    if is_memory_forget_request(prompt):
+        return "memory_forget"
+    if is_memory_recall_request(prompt):
+        return "memory_recall"
     if extract_memory_note(prompt):
         return "memory_store"
-    if any(token in lowered for token in ["list my notes", "show my notes", "show memory", "what notes do you have"]):
-        return "memory_list"
-    if "forget" in lowered or "remove note" in lowered or "delete note" in lowered:
-        return "memory_forget"
-    if "what did i ask you to remember" in lowered or "recall" in lowered:
-        return "memory_recall"
-    if "that" in lowered and parse_followup_operation(prompt):
+    if is_calculator_request(prompt):
         return "tool_calculator"
-    if any(keyword in lowered for keyword in ["calculate", "compute", "evaluate", "what is "]):
-        if any(ch.isdigit() for ch in lowered) or "then" in lowered:
-            return "tool_calculator"
-    if any(keyword in lowered for keyword in ["lookup", "search", "find", "retrieve", "corpus"]):
+    if is_retrieval_request(prompt):
         return "retrieval_lookup"
     return None
 
@@ -564,7 +904,18 @@ class LocalGeneralistRuntime:
         if not hits:
             return "No retrieval results."
         lowered = query.lower()
-        if any(token in lowered for token in ["all results", "show results", "top", "with citations"]):
+        if any(
+            token in lowered
+            for token in [
+                "all results",
+                "show results",
+                "show sources",
+                "top",
+                "with citation",
+                "with citations",
+                "cite",
+            ]
+        ):
             lines = []
             for idx, hit in enumerate(hits, start=1):
                 lines.append(f"{idx}. {hit['id']} ({hit['score']:.3f}) - {hit['snippet']}")
@@ -588,10 +939,7 @@ class LocalGeneralistRuntime:
     def _evaluate_calculation_chain(self, prompt: str) -> str:
         segments = parse_then_segments(prompt)
         if segments:
-            first_expr = sanitize_expression(segments[0])
-            if not first_expr:
-                raise ValueError("No expression found in first chain step.")
-            value = safe_eval_expression(first_expr)
+            value = evaluate_calculation_prompt(segments[0])
             for segment in segments[1:]:
                 op = parse_followup_operation(segment)
                 if not op:
@@ -609,8 +957,7 @@ class LocalGeneralistRuntime:
                 self.last_tool_value = None
             return followup
 
-        expr = sanitize_expression(prompt)
-        value = safe_eval_expression(expr)
+        value = evaluate_calculation_prompt(prompt)
         self.last_tool_value = value
         return normalize_number(value)
 

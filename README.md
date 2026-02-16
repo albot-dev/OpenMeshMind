@@ -160,6 +160,10 @@ Local runtime now supports:
 - note store/recall/list/forget flows
 - chained calculator commands (`... then ...`) and follow-ups using prior results (`multiply that by 3`)
 - retrieval responses with citations and prompt-level `top k` overrides
+- broader natural-language phrasing for:
+  - memory commands (`Can you remember that ...`, `Can you remind me what I asked you to remember?`, `What do you remember?`)
+  - calculator prompts (`What is twelve plus eight`, `Subtract five from twenty`)
+  - retrieval prompts (`What do the docs say about secure aggregation? Show three results with citations.`)
 
 Run generalist MVP evaluation gate:
 

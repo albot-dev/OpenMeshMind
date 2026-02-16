@@ -65,6 +65,10 @@ All notable changes to OpenMeshMind are documented here.
   - memory list/forget actions
   - chained calculator workflows and follow-up math using prior results
   - retrieval response citations with prompt-level top-k overrides
+- Improved natural-language understanding in `scripts/local_generalist_runtime.py`:
+  - broader intent overrides for conversational memory/retrieval/calculator phrasing
+  - number-word parsing for calculator prompts and retrieval `top k` (for example: `three results`)
+  - natural calculator forms (`What is twelve plus eight`, `Subtract five from twenty`)
 - Added runtime behavior coverage for the new features in `tests/test_local_generalist_runtime.py`.
 - Updated user docs with snapshot capture/comparison commands:
   - `README.md`
