@@ -74,6 +74,10 @@ All notable changes to OpenMeshMind are documented here.
   - `README.md`
   - `docs/NEXT_STEPS.md`
   - `docs/MVP_TASK_BREAKDOWN.md`
+- Added CPU-only LLM research and transition planning artifacts:
+  - `docs/CPU_ONLY_LLM_RESEARCH_BRIEF_2026-02-17.md`
+  - `docs/NEXT_STEPS.md` (new N5 phase for CPU-only LLM runtime/training transition)
+  - `README.md` (research brief reference)
 
 ### Changed
 

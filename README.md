@@ -180,6 +180,7 @@ MVP criteria and thresholds: `docs/MVP_CRITERIA.md`.
 MVP user-value plan: `docs/MVP_USER_VALUE_PLAN.md`.
 MVP Definition of Done checklist: `docs/MVP_DEFINITION_OF_DONE.md`.
 MVP granular task breakdown: `docs/MVP_TASK_BREAKDOWN.md`.
+CPU-only LLM research brief and transition path: `docs/CPU_ONLY_LLM_RESEARCH_BRIEF_2026-02-17.md`.
 
 Track current coming goals and sub-goals:
 

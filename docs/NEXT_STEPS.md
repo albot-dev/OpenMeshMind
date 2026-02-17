@@ -95,8 +95,31 @@ Progress:
 - Snapshot capture and comparison automation scripts are implemented and tested.
 - Remaining work is collecting real snapshots from at least 3 personal machines and publishing the resulting comparison artifacts.
 
+## Phase N5: CPU-Only LLM Runtime and Training Transition (Can do now)
+
+Goal: transition from routing-centric runtime behavior to a real local conversational LLM path while remaining CPU-first.
+
+References:
+
+- `docs/CPU_ONLY_LLM_RESEARCH_BRIEF_2026-02-17.md`
+
+Sub-goals:
+
+- Integrate a quantized CPU inference backend for multi-turn conversation.
+- Add CPU-only adapter fine-tuning path (LoRA-style) with reproducible metrics.
+- Add federated adapter aggregation simulation with communication/quality reporting.
+- Extend smoke/status gates for new conversational and adapter metrics.
+
+Exit criteria:
+
+- A local CPU command can run multi-turn LLM conversation with retrieval grounding + tool use.
+- A local CPU command can train adapters and demonstrate measurable held-out uplift.
+- A federated simulation command can aggregate adapter deltas and emit communication-efficiency artifacts.
+- New gates are machine-checkable and integrated into strict smoke/status flow.
+
 ## Immediate execution order
 
 1. Execute N4 reliability hardening and publish machine-comparison artifacts, aligned to phase targets in `docs/MVP_USER_VALUE_PLAN.md`.
-2. Keep N2 intake open for external contributors as data arrives, and validate refreshed artifacts with `docs/MVP_DEFINITION_OF_DONE.md`.
-3. Regenerate pilot reports when N2 reaches the required external cohort size, then re-run the strict DoD checklist before release decisions.
+2. Start N5 CPU-only LLM transition with inference baseline first, then adapter training and federated adapter simulation.
+3. Keep N2 intake open for external contributors as data arrives, and validate refreshed artifacts with `docs/MVP_DEFINITION_OF_DONE.md`.
+4. Regenerate pilot reports when N2 reaches the required external cohort size, then re-run the strict DoD checklist before release decisions.
